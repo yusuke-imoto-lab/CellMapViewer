@@ -1,0 +1,92 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    height: 100vh;
+    font-family: "Arial";
+}
+
+#title_area {
+    height: 80px;
+    text-align: center;
+}
+
+#manual_link {
+    text-align: right;
+    padding-right: 12px;
+}
+
+#title_text {
+    font-size: 32px;
+}
+
+#file_selector_row {
+    overflow: hidden;
+}
+
+#file_selector {
+    border: 2px dashed gray;
+    margin: 10px;
+    text-align: center;
+    min-width: max-content;
+    padding: 10px;
+    cursor: pointer;
+}
+
+#canvas_holder {
+    position: relative;
+    overflow: hidden;
+    resize: vertical;
+    height: calc(100vh - 360px);
+}
+
+#separator {
+    padding: 5px;
+    cursor: ns-resize;
+}
+
+#line {
+    border: 0;
+    border-top: 1px solid gray;
+}
+
+#cell_info_title {
+    text-align: center;
+    font-size: 20px;
+}
+
+#cell_info_table_holder {
+    border: 1px solid black;
+    height: 160px;
+    margin-bottom: 50px;
+    overflow: scroll;
+    white-space: pre;
+    resize: vertical;
+}
+
+#cell_info_table_holder table {
+    border-collapse: collapse;
+    position: relative;
+}
+
+#cell_info_table_holder th {
+    border: 1px solid #bbbbbb;
+    background-color: #dddddd;
+    background-clip: padding-box;
+    padding: 3px 6px;
+    position: sticky;
+    top: 0;
+}
+
+#cell_info_table_holder td {
+    border: 1px solid #bbbbbb;
+    padding: 3px 6px;
+    text-align: center;
+}
+
+tr.stats {
+    font-weight: bold;
+    background-color: #eeeeee;
+}

@@ -1,0 +1,23 @@
+img.figure {
+    border: 1px solid #7f7f7f;
+    padding: 4px;
+}
+
+h2 {
+    border-top: 1px solid gray;
+    border-bottom: 1px solid gray;
+    margin-top: 32px;
+    padding: 4px 0 4px 0;
+}
+
+p.ja-indent {
+    text-indent: 1em;
+}
+
+p.en-indent {
+    text-indent: 1em;
+}
+
+p.no-indent {
+    text-indent: 0;
+}

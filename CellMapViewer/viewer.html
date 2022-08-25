@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en-US">
+
+  <head>
+    <meta charset="utf-8">
+    <title>CellMapViewer</title>
+    <link rel="stylesheet" href="css/viewer.css">
+  </head>
+
+  <body id="body">
+
+    <header id="title_area">
+      <div id ="manual_link">
+        Manual (<a href="manual_en.html" target="_blank">English</a>/<a href="manual_ja.html" target="_blank">日本語</a>)
+      </div>
+      <div id="title_text">CellMapViewer</div>
+      <div id="file_name"></div>
+    </header>
+
+    <div id="file_selector_row">
+      <div id="file_selector">
+        Click here or drag and drop to select your file.
+      </div>
+      <div style="display: none;">
+        <input id="file_input" type="file">
+      </div>
+    </div>
+
+    <div id="canvas_holder"></div>
+    <div id="separator"><hr id="line"></div>
+    <div id="cell_info_title">Selected cells <span id="n_selected"></span></div>
+    <div id="cell_info_table_holder"></div>
+
+    <script type="text/javascript" src="js/libs/three/three.min.js"></script>
+    <script type="text/javascript" src="js/libs/three/TrackballControls.js"></script>
+    <script type="text/javascript" src="js/libs/three/SelectionBox.js"></script>
+    <script type="text/javascript" src="js/libs/three/SelectionHelper.js"></script>
+    <script type="text/javascript" src="js/libs/three/THREE.MeshLine.js"></script>
+    <script type="text/javascript" src="js/libs/delaunator/delaunator.min.js"></script>
+    <script type="text/javascript" src="js/libs/dat-gui/dat.gui.min.js"></script>
+    <script type="text/javascript" src="js/libs/PapaParse/papaparse.min.js"></script>
+    <script type="text/javascript" src="js/libs/html2canvas/html2canvas.min.js"></script>
+    <script type="text/javascript" src="js/libs/js-colormaps/js-colormaps.js"></script>
+    <script type="text/javascript" src="js/cellMapViewer/cellMapGraph/cellMapDataReader.js"></script>
+    <script type="text/javascript" src="js/cellMapViewer/cellMapGraph/cellMapError.js"></script>
+    <script type="text/javascript" src="js/cellMapViewer/cellMapGraph/cellMapFeature.js"></script>
+    <script type="text/javascript" src="js/cellMapViewer/cellMapGraph/cellMapGraph.js"></script>
+    <script type="text/javascript" src="js/cellMapViewer/cellMapGraph/cellMapStats.js"></script>
+    <script type="text/javascript" src="js/cellMapViewer/cellMapGraph/dataLabelConst.js"></script>
+    <script type="text/javascript" src="js/cellMapViewer/cellMapGraph/edge.js"></script>
+    <script type="text/javascript" src="js/cellMapViewer/cellMapGraph/graphErrorConst.js"></script>
+    <script type="text/javascript" src="js/cellMapViewer/cellMapGraph/pathFinder.js"></script>
+    <script type="text/javascript" src="js/cellMapViewer/cellMapGraph/priorityQueue.js"></script>
+    <script type="text/javascript" src="js/cellMapViewer/cellMapGraph/threshTypeLabelConst.js"></script>
+    <script type="text/javascript" src="js/cellMapViewer/viewer/colorMapLabelConst.js"></script>
+    <script type="text/javascript" src="js/cellMapViewer/viewer/viewerSettings.js"></script>
+    <script type="text/javascript" src="js/cellMapViewer/viewer/viewerErrorConst.js"></script>
+    <script type="text/javascript" src="js/cellMapViewer/viewer/colorMap.js"></script>
+    <script type="text/javascript" src="js/cellMapViewer/viewer/dragActionLabelConst.js"></script>
+    <script type="text/javascript" src="js/cellMapViewer/viewer/viewerMessageConst.js"></script>
+    <script type="text/javascript" src="js/cellMapViewer/viewer/viewer.js"></script>
+    <script type="text/javascript" src="js/cellMapViewer/eventHandler/eventHandler.js"></script>
+    <script type="text/javascript" src="js/cellMapViewer/eventHandler/eventHandlerMessageConst.js"></script>
+
+    <script type="text/javascript">
+
+      const canvasHolder = document.getElementById("canvas_holder");
+      const viewer = new Viewer(canvasHolder);
+      const fileNameHolder = document.getElementById("file_name");
+      const separator = document.getElementById("separator");
+      const cellInfoArea = document.getElementById("cell_info_table_holder");
+
+      viewer.onLoaded = viewerOnloaded(viewer, fileNameHolder, cellInfoArea);
+
+      const nSelectedIndicator = document.getElementById("n_selected");
+      viewer.onSelectionChange = viewerOnSelectionChange(
+        viewer, nSelectedIndicator
+      );
+
+      const fileSelector = document.getElementById("file_selector");
+      const fileInput = document.getElementById("file_input");
+
+      fileSelector.addEventListener("dragover", function(event) {
+        event.preventDefault();
+        this.style.backgroundColor = "lightgray";
+      });
+
+      fileSelector.addEventListener("dragleave", function(event) {
+        event.preventDefault();
+        this.style.backgroundColor = "";
+      });
+
+      fileSelector.addEventListener(
+        "drop", fileSelectorOndrop(viewer.loadFileData)
+      );
+
+      fileSelector.addEventListener(
+        "click", fileSelectorOnclick(fileInput)
+      );
+
+      fileInput.addEventListener(
+        "change", fileInputOnchange(viewer.loadFileData)
+      );
+
+      activateSeparator(separator, canvasHolder);
+
+    </script>
+  </body>
+</html>
