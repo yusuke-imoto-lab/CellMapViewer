@@ -3,7 +3,7 @@ Viewer of CellMap
 
 
 
-[<span style="font-size: 200%; color: red;">Run CellMapViewer</span>](https://yusuke-imoto-lab.github.io/CellMapViewer/CellMapViewer/viewer.html){:target="_blank" rel="noopener"}
+[Run CellMapViewer](https://yusuke-imoto-lab.github.io/CellMapViewer/CellMapViewer/viewer.html){:target="_blank" rel="noopener"}
 
 <p><a href="https://yusuke-imoto-lab.github.io/CellMapViewer/CellMapViewer/viewer.html" target="_blank">Run CellMapViewer</a></p>
 
