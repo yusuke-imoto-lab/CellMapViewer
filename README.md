@@ -3,9 +3,7 @@ CellMapViewer is a Web application for 3D-visualization of a cell map (cell diff
 
 <p><a href="https://yusuke-imoto-lab.github.io/CellMapViewer/CellMapViewer/viewer.html" target="_blank">Run CellMapViewer</a></p>
 
-A sample data is available in the [SampleData](https://github.com/yusuke-imoto-lab/CellMapViewer/tree/main/SampleData) directory. 
-
-[SampleData](https://www.dropbox.com/s/aqjrpeos4auvycy/CellMap_hippocampus.csv?dl=1)
+A sample data is available [here](https://www.dropbox.com/s/aqjrpeos4auvycy/CellMap_hippocampus.csv?dl=1). 
 
 <div style="text-align:left"><img style="width:100%; height: auto" src="https://github.com/yusuke-imoto-lab/CellMapViewer/blob/main/Images/TopImage.png"/></div>
 
