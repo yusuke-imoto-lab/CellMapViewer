@@ -10,7 +10,6 @@ A sample data is available [here](https://www.dropbox.com/s/aqjrpeos4auvycy/Cell
 <h1>Manual</h1>
 <p>Last updated: August 26th, 2022</p>
 <a href="https://yusuke-imoto-lab.github.io/CellMapViewer/CellMapViewer/manual_ja.html">Japanese</a>
-[Japanese](https://yusuke-imoto-lab.github.io/CellMapViewer/CellMapViewer/manual_ja.html)
 
 <h2>Table of contents</h2>
 <ul>
