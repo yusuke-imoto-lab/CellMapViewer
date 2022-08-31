@@ -8,7 +8,9 @@ A sample data is available [here](https://www.dropbox.com/s/aqjrpeos4auvycy/Cell
 <div style="text-align:left"><img style="width:100%; height: auto" src="https://github.com/yusuke-imoto-lab/CellMapViewer/blob/main/Images/TopImage.png"/></div>
 
 <h1>Manual</h1>
-<p>Last updated: August 26th, 2022</p> [Japanese](https://yusuke-imoto-lab.github.io/CellMapViewer/CellMapViewer/manual_ja.html)
+<p>Last updated: August 26th, 2022</p>
+<a href="https://yusuke-imoto-lab.github.io/CellMapViewer/CellMapViewer/manual_ja.html">Japanese</a>
+[Japanese](https://yusuke-imoto-lab.github.io/CellMapViewer/CellMapViewer/manual_ja.html)
 
 <h2>Table of contents</h2>
 <ul>
