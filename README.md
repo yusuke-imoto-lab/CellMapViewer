@@ -1,5 +1,5 @@
-# CellMapViewer
-CellMapViewer is a Web application for 3D-visualization of a cell map (cell differentiation landscape). It reads cell data including coordinates and features from a CSV-formatted text file, computes Delaunay triangulations, and displays the result.
+# CellMap Viewer
+CellMap Viewer is a Web application for 3D-visualization of a cell map (cell differentiation landscape). It reads cell data including coordinates and features from a CSV-formatted text file, computes Delaunay triangulations, and displays the result.
 
 <p><a href="https://yusuke-imoto-lab.github.io/CellMapViewer/CellMapViewer/viewer.html" target="_blank">Run CellMapViewer</a></p>
 
