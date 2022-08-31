@@ -64,7 +64,7 @@ A sample data is available [here](https://www.dropbox.com/s/aqjrpeos4auvycy/Cell
     <li>be encoded in UTF-8;</li>
     <li>be CSV-formatted using comma (",") as a delimiter;</li>
     <li>have the header describing the column names as the first line;</li>
-    <li>have no redundancy in the column names;/li>
+    <li>have no redundancy in the column names;</li>
     <li>describe each single cell data in each single line below the first one;</li>
     <li>contain "CellID", "X", "Y" and "Potential" columns (the characters' case and the presence of white spaces do not matter);</li>
     <li>have lines with the equal number of columns; and</li>
