@@ -11,13 +11,6 @@ A sample data is available [here](https://www.dropbox.com/s/aqjrpeos4auvycy/Cell
 
 [English](https://yusuke-imoto-lab.github.io/CellMapViewer/CellMapViewer/manual_en.html) / [Japanese](https://yusuke-imoto-lab.github.io/CellMapViewer/CellMapViewer/manual_ja.html)
 
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Manual - CellMapViewer</title>
-<link rel="stylesheet" href="css/manual.css">
-</head>
-
 <body>
 
 <h1>CellMapViewer manual</h1>
