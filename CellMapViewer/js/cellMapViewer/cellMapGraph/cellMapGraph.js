@@ -115,7 +115,7 @@ class CellMapGraph {
     const lenPotentialArrayIsValid = potentialArray.length === nNode;
     const lenEdgeListArrayIsValid = edgeListArray.length === nNode;
 
-    if (! (lenXyArrayIsValid && lenPotentialArrayIsValid &&
+    if (!(lenXyArrayIsValid && lenPotentialArrayIsValid &&
       lenEdgeListArrayIsValid)) {
       throw lengthsNotEqualError;
     }
@@ -166,7 +166,7 @@ class CellMapGraph {
    * @readonly
    * @memberof CellMapGraph
    */
-   get idArray() {
+  get idArray() {
     return this.#idArray;
   }
 
@@ -247,7 +247,7 @@ class CellMapGraph {
    * @memberof CellMapGraph
    */
   get zFeatureLabelList() {
-    const result = [potentialLabel];
+    const result = [potentialLabel, annotationLabel];
     for (const feature of this.#otherFeatureList) {
       result.push(feature.name);
     }
@@ -331,14 +331,36 @@ class CellMapGraph {
   getZFeatureArrayByName = (name) => {
 
     // name 引数が特徴量を指していなければエラーとします。
-    if (! this.zFeatureLabelList.includes(name)) {
+    if (!this.zFeatureLabelList.includes(name)) {
       throw featureDoesNotExistError(name);
     }
 
     if (name === potentialLabel) {
       return this.#potentialArray;
-    }
-    else {
+    } else if (name === annotationLabel) {
+
+      // アノテーションがない場合は空の配列を返します。
+      if (this.annotationArray === null) return [];
+
+      // アノテーションを抽出します。
+      const annotationSet = new Set(this.#annotationArray);
+      
+      // アノテーションを数値に変換する連想配列を作成します。
+      const indexDict = {};
+      let index = 0;
+      for (let annotation of annotationSet ) {
+        indexDict[annotation] = index;
+        index++;
+      }
+
+      // アノテーションを数値に置換した配列を返します。
+      const valueArray = [];
+      for (let value of this.#annotationArray) {
+        valueArray.push(indexDict[value]);
+      }
+      return valueArray;
+
+    } else {
       for (const feature of this.#otherFeatureList) {
         if (feature.name === name) {
           return feature.valueArray;
@@ -394,8 +416,8 @@ class CellMapGraph {
    */
   set zFeatureType(value) {
     // z 座標に用いようとする特徴量が存在しなければエラーとします。
-    if (! this.zFeatureLabelList.includes(value)) {
-        throw featureDoesNotExistError(value);
+    if (!this.zFeatureLabelList.includes(value)) {
+      throw featureDoesNotExistError(value);
     }
 
     this.#zFeatureType = value;
@@ -426,7 +448,7 @@ class CellMapGraph {
    */
   set triangleThreshType(value) {
     // 閾値の種類が不正であればエラーとします。
-    if (! threshTypeLabelList.includes(value)) {
+    if (!threshTypeLabelList.includes(value)) {
       throw invalidThreshTypeError(value);
     }
 
@@ -469,7 +491,7 @@ class CellMapGraph {
    */
   setThreshTypeAndPercent = (type, percent) => {
     // 閾値の種類が不正であればエラーとします。
-    if (! threshTypeLabelList.includes(type)) {
+    if (!threshTypeLabelList.includes(type)) {
       throw invalidThreshTypeError(type);
     }
     // 閾値 (%) が [0, 100] の範囲外であればエラーとします。
@@ -487,7 +509,7 @@ class CellMapGraph {
    *
    * @memberof CellMapGraph
    */
-   get sortedTriangles() {
+  get sortedTriangles() {
 
     switch (this.#triangleThreshType) {
       case areaLabel:
@@ -507,7 +529,7 @@ class CellMapGraph {
    *
    * @memberof CellMapGraph
    */
-   _updateEnabledEdge = () => {
+  _updateEnabledEdge = () => {
 
     // 辺の half-edge の有効/無効状態をリセットします。
     for (const edge of this.allEdgeList) {
@@ -521,19 +543,19 @@ class CellMapGraph {
     const nEnabledTriangles = this.nEnabledTriangles;
 
     // 除去された (無効化された) 三角形分割です。
-    const unabledTriangles = sortedTriangles.slice(3 * nEnabledTriangles);
+    const disabledTriangles = sortedTriangles.slice(3 * nEnabledTriangles);
 
     // 無効化された三角形分割をループしながら、各 half-edge を無効化します。
-    for (let i = 0; i < unabledTriangles.length; i += 3) {
+    for (let i = 0; i < disabledTriangles.length; i += 3) {
 
       // Half-edge をループするための頂点の配列です。
 
       // 末尾に 1 番目の頂点を追加して、3 番目の頂点と辺を成すようにします。
       const verticesToIter = [
-        unabledTriangles[i],
-        unabledTriangles[i + 1],
-        unabledTriangles[i + 2],
-        unabledTriangles[i]
+        disabledTriangles[i],
+        disabledTriangles[i + 1],
+        disabledTriangles[i + 2],
+        disabledTriangles[i]
       ];
 
       // 3 個の頂点をループします。
@@ -569,7 +591,7 @@ class CellMapGraph {
               edge.halfEdgeFrom1Enabled = false;
               break;
             default:
-              // ここには到達しないはずです。
+            // ここには到達しないはずです。
           }
         }
       }
@@ -583,13 +605,13 @@ class CellMapGraph {
    * @readonly
    * @memberof CellMapGraph
    */
-   get nEnabledTriangles() {
+  get nEnabledTriangles() {
 
     // 全ての三角形の枚数です。
     const nAllTriangles = this.areaSortedTriangles.length / 3;
 
     // 残る三角形の割合です。
-    const remainingRatio = (100-this.triangleThreshPercent) / 100;
+    const remainingRatio = (100 - this.triangleThreshPercent) / 100;
 
     // 有効な三角形の枚数です。
     return Math.round(nAllTriangles * remainingRatio);

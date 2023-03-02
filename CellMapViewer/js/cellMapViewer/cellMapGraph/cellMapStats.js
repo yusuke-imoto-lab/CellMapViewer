@@ -20,6 +20,10 @@ class CellMapStats {
   // 各特徴量や座標の変動係数を保持する辞書です。
   #cvDict = {};
 
+  // 各特徴量や座標の最小値、最大値を保持する辞書です。
+  #minDict = {};
+  #maxDict = {};
+
   /**
    * コンストラクターです。
    * 
@@ -33,25 +37,39 @@ class CellMapStats {
     // 合計値を格納する辞書です。
     const sumDict = {};
 
-    // x、y の合計値を計算します。
+    // x、y の合計値と最小値、最大値を計算します。
     sumDict[xLabel] = 0;
     sumDict[yLabel] = 0;
+    this.#minDict[xLabel] = Infinity;
+    this.#minDict[yLabel] = Infinity;
+    this.#maxDict[xLabel] = -Infinity;
+    this.#maxDict[yLabel] = -Infinity;
+    
     for (const i of indices) {
 
       const [x, y] = graph.xyArray[i];
       sumDict[xLabel] += x;
       sumDict[yLabel] += y;
+      if (this.#minDict[xLabel] > x) this.#minDict[xLabel] = x;
+      if (this.#minDict[yLabel] > y) this.#minDict[yLabel] = y;
+      if (this.#maxDict[xLabel] < x) this.#maxDict[xLabel] = x;
+      if (this.#maxDict[yLabel] < y) this.#maxDict[yLabel] = y;
     }
 
-    // z 座標となりうる特徴量それぞれの合計値を計算します。
+    // z 座標となりうる特徴量それぞれの合計値と最小値、最大値を計算します。
     for (const zFeatureName of graph.zFeatureLabelList) {
 
       sumDict[zFeatureName] = 0;
+      this.#minDict[zFeatureName] = Infinity;
+      this.#maxDict[zFeatureName] = -Infinity;
       const zFeatureArray = graph.getZFeatureArrayByName(zFeatureName);
 
       for (const i of indices) {
 
-        sumDict[zFeatureName] += zFeatureArray[i];
+        const value = zFeatureArray[i];
+        sumDict[zFeatureName] += value;
+        if (this.#minDict[zFeatureName] > value) this.#minDict[zFeatureName] = value;
+        if (this.#maxDict[zFeatureName] < value) this.#maxDict[zFeatureName] = value;
       }
     }
 
@@ -179,6 +197,36 @@ class CellMapStats {
 
     if (featureName in this.#cvDict) {
       return this.#cvDict[featureName];
+    }
+    throw featureDoesNotExistError(featureName);
+  }
+
+  /**
+   * 指定した特徴量または座標の最小値を返します。
+   *
+   * @param {string} featureName 特徴量または座標の名前です。
+   * @return {number} 指定した特徴量または座標の最小値です。
+   * @memberof CellMapStats
+   */
+  getMin = (featureName) => {
+
+    if (featureName in this.#minDict) {
+      return this.#minDict[featureName];
+    }
+    throw featureDoesNotExistError(featureName);
+  }
+
+  /**
+   * 指定した特徴量または座標の最大値を返します。
+   *
+   * @param {string} featureName 特徴量または座標の名前です。
+   * @return {number} 指定した特徴量または座標の最大値です。
+   * @memberof CellMapStats
+   */
+  getMax = (featureName) => {
+
+    if (featureName in this.#maxDict) {
+      return this.#maxDict[featureName];
     }
     throw featureDoesNotExistError(featureName);
   }

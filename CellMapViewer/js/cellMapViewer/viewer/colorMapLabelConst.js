@@ -27,6 +27,12 @@ const coolwarmLabel = "Coolwarm";
 /** @type {string} カラー マップ Gray blue のラベルです。*/
 const grayBlueLabel = "Gray blue";
 
+/** @type {string} カラー マップ cubehelix のラベルです。*/
+const cubeHelixLabel = "Cubehelix";
+
+/** @type {string} カラー マップ gist_rainbow のラベルです。*/
+const gistNcarLabel = "Gist NCAR";
+
 /** @type {Array<string>} カラー マップのラベルのリストです。 */
 const colorMapLabelList = [
   gistEarthLabel,
@@ -34,7 +40,9 @@ const colorMapLabelList = [
   grayBlueLabel,
   jetLabel,
   oceanLabel,
-  plasmaLabel,
   terrainLabel,
+  cubeHelixLabel,
+  plasmaLabel,
   viridisLabel,
+  gistNcarLabel,
 ];

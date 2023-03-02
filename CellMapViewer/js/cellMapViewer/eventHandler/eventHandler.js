@@ -21,9 +21,9 @@ let isProcessingFile = false;
  *     infoTableHolder 引数にファイルの内容を反映した表 (ID: "info_table") 
  *     のヘッダーを作成するイベント ハンドラーです。
  */
-function viewerOnloaded(viewer, fileNameHolder, infoTableHolder) {
+function viewerOnLoaded(viewer, fileNameHolder, infoTableHolder) {
 
-  return function()  {
+  return function () {
     fileNameHolder.textContent = "File: " + viewer.loadedFileName;
 
     // それまでの細胞の情報の表を消去します。
@@ -57,7 +57,7 @@ function viewerOnloaded(viewer, fileNameHolder, infoTableHolder) {
  */
 function viewerOnSelectionChange(viewer, nSelectedIndicator) {
 
-  return function() {
+  return function (isShowingChart) {
 
     // 選択中の細胞数を表示します。
     nSelectedIndicator.textContent = `(${viewer.selectedCellList.length})`
@@ -75,7 +75,7 @@ function viewerOnSelectionChange(viewer, nSelectedIndicator) {
     }
 
     // 選択された細胞がなければ終了します。
-    if (! viewer.selectedCellList.length) {
+    if (!viewer.selectedCellList.length) {
       return;
     }
 
@@ -100,6 +100,8 @@ function viewerOnSelectionChange(viewer, nSelectedIndicator) {
     const stats = viewer.getStatsOfSelection();
 
     // 統計量の情報を表に追加します。
+    appendStats("Min.", stats.getMin);
+    appendStats("Max.", stats.getMax);
     appendStats("Mean", stats.getMean);
     appendStats("Variance", stats.getVariance);
     appendStats("SD", stats.getSD);
@@ -128,8 +130,37 @@ function viewerOnSelectionChange(viewer, nSelectedIndicator) {
       }
     }
 
+    // グラフを表示します。
+    if (isShowingChart) {
+
+      // グラフ描画用の行を追加します。
+      const tr = document.createElement("tr");
+      table.appendChild(tr);
+
+      // すべての列にわたるセルを作成します。
+      const td = document.createElement("td");
+      const cols = table.rows[0].cells.length;
+      td.setAttribute("colSpan", cols);
+      td.setAttribute("height", 200);
+      tr.appendChild(td);
+
+      // Chart 描画用の Canvas を作成します。
+      const canvas = document.createElement("canvas");
+      canvas.id = "chart";
+      canvas.style.position = "relative";
+      td.appendChild(canvas);
+      const ctx = canvas.getContext("2d");
+      // Chart を描画します。
+      viewer.drawChart(ctx);
+      
+    } else {
+
+      // Chart をクリアします。
+      viewer.resetChart();
+    }
+
     table.parentElement.scrollTo(
-      {top: table.parentElement.scrollHeight, behavior: "smooth"}
+      { top: table.parentElement.scrollHeight, behavior: "auto" }
     );
   }
 }
@@ -145,7 +176,7 @@ function viewerOnSelectionChange(viewer, nSelectedIndicator) {
  */
 function fileSelectorOndrop(callback) {
 
-  return function(event) {
+  return function (event) {
     event.preventDefault();
     this.style.backgroundColor = "";
 
@@ -155,7 +186,7 @@ function fileSelectorOndrop(callback) {
       this.style.backgroundColor = "";
       return;
     }
- 
+
     const files = event.dataTransfer.files;
 
     // 複数のファイルが同時にドロップされた場合です。
@@ -180,7 +211,7 @@ function fileSelectorOndrop(callback) {
  *     click イベントを発火させるコールバックです。
  */
 function fileSelectorOnclick(fileInput) {
-  return function(event) {
+  return function (event) {
     if (isProcessingFile) {
       alertAnotherFile();
       return;
@@ -200,7 +231,7 @@ function fileSelectorOnclick(fileInput) {
  */
 function fileInputOnchange(callback) {
 
-  return function(event) {
+  return function (event) {
     const files = event.target.files;
     isProcessingFile = true;
     callback(files[0]);
@@ -232,11 +263,97 @@ function activateSeparator(separator, canvasHolder) {
     event.preventDefault();
   });
   document.addEventListener("mousemove", (event) => {
-    if (! isDraggingLine) return;
+    if (!isDraggingLine) return;
     const newHeight = canvasHolder.clientHeight + event.movementY;
     canvasHolder.style.height = newHeight + "px";
   });
   document.addEventListener("mouseup", () => {
     isDraggingLine = false;
   });
+}
+
+/**
+ * テーブルの内容を CSV ファイルに保存します。
+ */
+function viewerOnSaveTableClick() {
+  // テーブルを取得します。
+  const table = document.getElementById(tableId);
+  // テーブルが空の場合はメソッドを終了します。
+  if (table === null) return;
+  // CSV ファイルを保存します。
+  var blob = new Blob([tableToCsv(table)], { type: "text/csv" });
+  var link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  // 日時からファイル名を作成します。
+  link.download = formatDateTime(new Date()) + "-selected_cells.csv";
+  link.click();
+}
+
+/**
+ * テーブルの内容を CSV 文字列に変換して返します。
+ * 
+ * @param {HTMLElement} table テーブルを渡します。
+ */
+function tableToCsv(table) {
+
+  if (table === null) return null;
+
+  var rows = getRows(table);
+  var lines = [];
+  var delimiter = ',';
+
+  for (var i = 0, numOfRows = rows.length; i < numOfRows; i++) {
+    var cols = getCols(rows[i]);
+    var line = [];
+
+    for (var j = 0, numOfCols = cols.length; j < numOfCols; j++) {
+      var text = cols[j].textContent || cols[j].innerText;
+      if (text.includes(',') || text.includes('"')) text = '"' + text.replace(/"/g, '""') + '"';
+      line.push(text);
+    }
+
+    lines.push(line.join(delimiter));
+  }
+
+  return lines.join("\r\n")
+}
+
+function getRows(table) {
+  return getNodesByName(table, 'tr');
+}
+
+function getCols(table) {
+  return getNodesByName(table, ['td', 'th']);
+}
+
+function getNodesByName(element) {
+  var children = element.childNodes;
+  var nodeNames = ('string' === typeof arguments[1]) ? [arguments[1]] : arguments[1];
+  nodeNames = nodeNames.map(function (str) { return str.toLowerCase() });
+
+  var results = [];
+
+  for (var i = 0, max = children.length; i < max; i++) {
+    if (nodeNames.indexOf(children[i].nodeName.toLowerCase()) !== -1) {
+      results.push(children[i]);
+    }
+    else {
+      results = results.concat(this.getNodesByName(children[i], nodeNames));
+    }
+  }
+
+  return results;
+}
+
+/**
+ * 日時を日付文字列に変換する関数です。
+ */
+function formatDateTime(date) {
+  const yyyy = date.getFullYear();
+  const MM = ("0" + (date.getMonth() + 1)).slice(-2);
+  const dd = ("0" + date.getDate()).slice(-2);
+  const HH = ("0" + date.getHours()).slice(-2);
+  const mm = ("0" + date.getMinutes()).slice(-2);
+  const ss = ("0" + date.getSeconds()).slice(-2);
+  return yyyy + MM + dd + "-" + HH + mm + ss;
 }

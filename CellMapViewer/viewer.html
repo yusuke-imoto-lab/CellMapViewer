@@ -3,7 +3,7 @@
 
   <head>
     <meta charset="utf-8">
-    <title>CellMap Viewer</title>
+    <title>CellMapViewer</title>
     <link rel="stylesheet" href="css/viewer.css">
   </head>
 
@@ -13,22 +13,22 @@
       <div id ="manual_link">
         Manual (<a href="manual_en.html" target="_blank">English</a>/<a href="manual_ja.html" target="_blank">日本語</a>) / <a href="https://www.dropbox.com/s/aqjrpeos4auvycy/CellMap_hippocampus.csv?dl=1" target="_blank">Sample data</a>
       </div>
-      <div id="title_text">CellMap Viewer</div>
+      <div id="title_text">CellMapViewer</div>
       <div id="file_name"></div>
     </header>
 
     <div id="file_selector_row">
       <div id="file_selector">
-        Click here or drag and drop to select your file.
+        Click here or drag and drop to select your data file.
       </div>
       <div style="display: none;">
-        <input id="file_input" type="file">
+        <input id="file_input" type="file" accept="text/csv">
       </div>
     </div>
 
     <div id="canvas_holder"></div>
     <div id="separator"><hr id="line"></div>
-    <div id="cell_info_title">Selected cells <span id="n_selected"></span></div>
+    <div id="cell_info_title">Selected cells <a href="javascript:viewerOnSaveTableClick();"><span id="n_selected"></span></a></div>
     <div id="cell_info_table_holder"></div>
 
     <script type="text/javascript" src="js/libs/three/three.min.js"></script>
@@ -36,11 +36,13 @@
     <script type="text/javascript" src="js/libs/three/SelectionBox.js"></script>
     <script type="text/javascript" src="js/libs/three/SelectionHelper.js"></script>
     <script type="text/javascript" src="js/libs/three/THREE.MeshLine.js"></script>
+    <script type="text/javascript" src="js/libs/three/GridSegments.js"></script>
     <script type="text/javascript" src="js/libs/delaunator/delaunator.min.js"></script>
     <script type="text/javascript" src="js/libs/dat-gui/dat.gui.min.js"></script>
     <script type="text/javascript" src="js/libs/PapaParse/papaparse.min.js"></script>
     <script type="text/javascript" src="js/libs/html2canvas/html2canvas.min.js"></script>
     <script type="text/javascript" src="js/libs/js-colormaps/js-colormaps.js"></script>
+    <script type="text/javascript" src="js/libs/chart/chart.umd.js"></script>
     <script type="text/javascript" src="js/cellMapViewer/cellMapGraph/cellMapDataReader.js"></script>
     <script type="text/javascript" src="js/cellMapViewer/cellMapGraph/cellMapError.js"></script>
     <script type="text/javascript" src="js/cellMapViewer/cellMapGraph/cellMapFeature.js"></script>
@@ -58,6 +60,7 @@
     <script type="text/javascript" src="js/cellMapViewer/viewer/colorMap.js"></script>
     <script type="text/javascript" src="js/cellMapViewer/viewer/dragActionLabelConst.js"></script>
     <script type="text/javascript" src="js/cellMapViewer/viewer/viewerMessageConst.js"></script>
+    <script type="text/javascript" src="js/cellMapViewer/viewer/textureData.js"></script>
     <script type="text/javascript" src="js/cellMapViewer/viewer/viewer.js"></script>
     <script type="text/javascript" src="js/cellMapViewer/eventHandler/eventHandler.js"></script>
     <script type="text/javascript" src="js/cellMapViewer/eventHandler/eventHandlerMessageConst.js"></script>
@@ -70,7 +73,7 @@
       const separator = document.getElementById("separator");
       const cellInfoArea = document.getElementById("cell_info_table_holder");
 
-      viewer.onLoaded = viewerOnloaded(viewer, fileNameHolder, cellInfoArea);
+      viewer.onLoaded = viewerOnLoaded(viewer, fileNameHolder, cellInfoArea);
 
       const nSelectedIndicator = document.getElementById("n_selected");
       viewer.onSelectionChange = viewerOnSelectionChange(

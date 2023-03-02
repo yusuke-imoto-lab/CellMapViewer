@@ -1,6 +1,5 @@
 "use strict";
 
-
 /**
  * 細胞地図のビューワーを表すクラスです。
  *
@@ -10,7 +9,6 @@ class Viewer {
 
   // HTML 要素のフォントです。
   #fontFamily = "Arial";
-
 
   // Three.js 関連のフィールドです。
 
@@ -33,23 +31,39 @@ class Viewer {
   #controls = null;
 
   // 全ての細胞を表すジオメトリです。
+  #geomSurface = new THREE.BufferGeometry();
   #geom = new THREE.BufferGeometry();
-  // 全ての細胞を表す点群のマテリアルです。
-  #pointsMaterial = new THREE.PointsMaterial({color: 0x99ccff});
-  // 全ての細胞を表す点群です。
-  #cellPoints = new THREE.Points(this.#geom, this.#pointsMaterial);
 
   // 細胞地図の表面を表すメッシュのマテリアルです。
   #meshMaterial = new THREE.MeshLambertMaterial(
-    {vertexColors: true, side: THREE.DoubleSide}
+    { vertexColors: true, side: THREE.DoubleSide }
   );
   // 細胞地図の表面を表すメッシュです。
-  #mesh = new THREE.Mesh(this.#geom, this.#meshMaterial);
+  #mesh = new THREE.Mesh(this.#geomSurface, this.#meshMaterial);
+
+  // 点群描画用のテクスチャーです。
+  #discTexture = new THREE.TextureLoader().load(discDataUrl);
+
+  // 全ての細胞を表す点群のマテリアルです。
+  #pointsMaterial = new THREE.PointsMaterial({
+    vertexColors: true,
+    transparent: true,
+    map: this.#discTexture,
+    alphaTest: 0.5
+  });
+
+  // 全ての細胞を表す点群です。
+  #cellPoints = new THREE.Points(this.#geom, this.#pointsMaterial);
 
   // 選択中の細胞を表すジオメトリです。
   #selectedCellGeom = new THREE.BufferGeometry();
   // 選択中の細胞を表す点群のマテリアルです。
-  #selectedPointsMaterial = new THREE.PointsMaterial({color: 0xff0000});
+  #selectedPointsMaterial = new THREE.PointsMaterial({
+    color: 0xff0000,
+    transparent: true,
+    map: this.#discTexture,
+    alphaTest: 0.5
+  });
   // 選択中の細胞を表す点群です。
   #selectedCellPoints = new THREE.Points(
     this.#selectedCellGeom, this.#selectedPointsMaterial
@@ -58,7 +72,10 @@ class Viewer {
   // 経路を表すメッシュです。
   #pathLineMesh = null;
   // 経路を表すメッシュのマテリアルです。
-  #pathLineMaterial = new MeshLineMaterial({color: 0xff0000});
+  #pathLineMaterial = new MeshLineMaterial({ color: 0xff0000 });
+
+  // グリッドを表すメッシュです。
+  #gridHelper = null;
 
   // マウスのボタンが押下されたときの x 座標です。
   #mousedownX = 0;
@@ -73,7 +90,7 @@ class Viewer {
   #selectionHelper = null;
 
   // クリック位置にあるオブジェクトを調べるための光線です。
-  #raycaster = new THREE.Raycaster();
+  #rayCaster = new THREE.Raycaster();
 
   // ビューワーから設定できる値です。
   #settings = new ViewerSettings();
@@ -85,7 +102,7 @@ class Viewer {
   // dat.GUI 関連のフィールドです。
 
   // GUI です。
-  #gui = new dat.GUI({autoPlace: false, width: 300});
+  #gui = new dat.GUI({ autoPlace: false, width: 300 });
 
   // #gui の HTML 要素です。
   #guiElem = this.#gui.domElement;
@@ -108,11 +125,17 @@ class Viewer {
   // #guiFolderZ で z 軸のスケールを設定するためのコントローラーです。
   #zScaleController = null;
 
+  // #guiFolderZ でグリッドの z 軸を設定するためのコントローラーです。
+  #gridZController = null;
+
   // #gui で着色を設定するためのフォルダーです。
   #guiFolderColor = this.#gui.addFolder("Color");
 
   // #guiFolderColor で表面の着色を設定するためのフォルダーです。
   #guiFolderColorSurface = this.#guiFolderColor.addFolder("Surface");
+
+  // #guiFolderColor で点群の着色を設定するためのフォルダーです。
+  #guiFolderColorPoints = this.#guiFolderColor.addFolder("Cells");
 
   // #guiFolderColorSurface で着色に用いる特徴量を設定するためのコントローラーです。
   #colorFeatureController = null;
@@ -128,11 +151,28 @@ class Viewer {
   // カラー マップの最大値を設定するためのコントローラーです。
   #colorMaxController = null;
 
+  // #guiFolderColorPoints で着色に用いる特徴量を設定するためのコントローラーです。
+  #pointsColorFeatureController = null;
+
+  // #guiFolderColorPoints でカラー マップを設定するためのコントローラーです。
+  #pointsColorMapController = null;
+
+  // #guiFolderColorPoints で
+  // カラー マップの最小値を設定するためのコントローラーです。
+  #pointsColorMinController = null;
+
+  // #guiFolderColorPoints で
+  // カラー マップの最大値を設定するためのコントローラーです。
+  #pointsColorMaxController = null;
+
   // #guiFolderColor で背景色を設定するためのコントローラーです。
   #bgColorController = null;
 
   // #gui で点の大きさや線の太さを設定するためのフォルダーです。
   #guiFolderSize = this.#gui.addFolder("Size");
+
+  // #guiFolderSize でアノテーションのフォント サイズを設定するためのコントローラーです。
+  #annotationFontSizeController = null;
 
   // #guiFolderSize で細胞を表す点の大きさを設定するためのコントローラーです。
   #cellSizeController = null;
@@ -163,8 +203,18 @@ class Viewer {
   // 切り替えるためのコントローラーです。
   #highlightSelectionController = null;
 
+  // #guiFolderView でグリッドの表示を
+  // 切り替えるためのコントローラーです。
+  #showGridController = null;
+
   // #gui でドラッグによる捜査対象を切り替えるコントローラーです。
   #dragActionController = null;
+
+  // #gui で設定ファイルの入出力を行うためのフォルダーです。
+  #guiFolderSettings = this.#gui.addFolder("Config");
+
+  // #gui でパスの抽出を行うためのフォルダーです。
+  #guiFolderPath = this.#gui.addFolder("Path");
 
   // カラー マップ オブジェクトです。
   // グラフが読み込まれているときにインスタンス化します。
@@ -172,9 +222,14 @@ class Viewer {
     this.#settings.colorMap,
     this.#settings.colorMin, this.#settings.colorMax
   );
+  #pointsColorMap = new ColorMap(
+    this.#settings.pointsColorMap,
+    this.#settings.pointsColorMin, this.#settings.pointsColorMax
+  );
 
   // カラーバー表示領域用の <div> 要素です。
-  #colorbarBox = document.createElement("div");
+  #colorBarBoxSurface = document.createElement("div");
+  #colorBarBoxPoints = document.createElement("div");
 
   // アノテーションの表示と管理のためのオブジェクトを登録するリストです。
   #annotationObjList = [];
@@ -186,16 +241,19 @@ class Viewer {
   #loadedFileName = "";
 
   // ファイルの読み込みが完了したときに呼ばれるコールバックです。
-  #onLoaded = function(){};
+  #onLoaded = function () { };
 
   // 選択中の細胞 (ノード、頂点) のインデックスのリストです。
   #selectedCellList = [];
 
   // 選択中の細胞の情報が変化したときに呼ばれるコールバックです。
-  #onSelectionChange = function(){};
+  #onSelectionChange = function (isShowingChart) { console.log(isShowingChart); };
 
   // 経路を表示しているかどうかを表すフラグです。
   #isShowingPath = false;
+
+  // chart オブジェクトへの参照です。
+  #chart = null;
 
   /**
    * コンストラクターです。
@@ -229,15 +287,23 @@ class Viewer {
     this.#pathLineMaterial.lineWidth = this.#settings.pathWidth;
 
     // 光線の軌跡からどの程度離れたオブジェクトとの交点を検出するかを調節します。
-    this.#raycaster.params.Points.threshold = 0.05;
+    this.#rayCaster.params.Points.threshold = 0.05;
 
     // カラー バー表示用のボックスのスタイルを設定し、カラー バーを表示します。
-    this.#colorbarBox.style.display = "flex";
-    this.#colorbarBox.style.position = "absolute";
-    this.#colorbarBox.style.top = "0";
-    this.#colorbarBox.style.color = "white";
-    this.#colorbarBox.style.fontFamily = this.#fontFamily;
-    this.#updateColorbarDisplay();
+    this.#colorBarBoxSurface.style.display = "flex";
+    this.#colorBarBoxSurface.style.position = "absolute";
+    this.#colorBarBoxSurface.style.top = "0";
+    this.#colorBarBoxSurface.style.color = "white";
+    this.#colorBarBoxSurface.style.fontFamily = this.#fontFamily;
+
+    this.#colorBarBoxPoints.style.display = "flex";
+    this.#colorBarBoxPoints.style.position = "absolute";
+    this.#colorBarBoxPoints.style.top = "0";
+    this.#colorBarBoxPoints.style.left = "100px";
+    this.#colorBarBoxPoints.style.color = "white";
+    this.#colorBarBoxPoints.style.fontFamily = this.#fontFamily;
+
+    this.#updateColorBars();
 
     // カメラ コントロールを初期化、設定します。
     // (注意) この初期化は、#canvas と parentElement の親子関係を
@@ -255,7 +321,8 @@ class Viewer {
     // 手前に来るべき要素の表示順序を指定します。
     const maxZIndex = 2147483647;
     this.#guiElem.style.zIndex = maxZIndex;
-    this.#colorbarBox.style.zIndex = maxZIndex - 1;
+    this.#colorBarBoxSurface.style.zIndex = maxZIndex - 1;
+    this.#colorBarBoxPoints.style.zIndex = maxZIndex - 1;
 
     // その他初期設定を反映させます。
     this.#updateSurfaceVisibility();
@@ -320,8 +387,11 @@ class Viewer {
       name("Scale").onChange(this.#handleZScaleChange);
     // 1 行上が onChange なのは、onFinishChange だと
     // 入力テキストボックスにフォーカスしただけで発火してしまうからです。
+    this.#gridZController = this.#guiFolderZ.add(
+      this.#settings, "gridZ", 0).
+      name("Grid").onChange(this.#handleGridZChange);
 
-    // 表面の着色の設定用のコントローラーを追加し、展開した状態にします。
+    // 表面の着色の設定用のコントローラーを追加します。
     this.#colorFeatureController = this.#guiFolderColorSurface.add(
       this.#settings, "colorFeature", featureOptions).
       name("Feature").onFinishChange(this.#handleColorFeatureChange);
@@ -330,22 +400,41 @@ class Viewer {
       name("Color map").onFinishChange(this.#handleColorMapChange);
     this.#colorMinController = this.#guiFolderColorSurface.add(
       this.#settings, "colorMin").
-      name("Min").onFinishChange(this.#handleColorMinChange);
+      name("Min").onFinishChange(this.#handleColorMapChange);
     this.#colorMaxController = this.#guiFolderColorSurface.add(
       this.#settings, "colorMax").
-      name("Max").onFinishChange(this.#handleColorMaxChange);
+      name("Max").onFinishChange(this.#handleColorMapChange);
     this.#guiFolderColorSurface.add(this, "_setColorMinMaxToFeatureRange").
       name("Set min/max to feature range");
-    this.#guiFolderColorSurface.open();
+    //this.#guiFolderColorSurface.open();
+
+    this.#pointsColorFeatureController = this.#guiFolderColorPoints.add(
+      this.#settings, "pointsColorFeature", featureOptions).
+      name("Feature").onFinishChange(this.#handlePointsColorFeatureChange);
+    this.#pointsColorMapController = this.#guiFolderColorPoints.add(
+      this.#settings, "pointsColorMap", colorMapLabelList).
+      name("Color map").onFinishChange(this.#handleColorMapChange);
+    this.#pointsColorMinController = this.#guiFolderColorPoints.add(
+      this.#settings, "pointsColorMin").
+      name("Min").onFinishChange(this.#handleColorMapChange);
+    this.#pointsColorMaxController = this.#guiFolderColorPoints.add(
+      this.#settings, "pointsColorMax").
+      name("Max").onFinishChange(this.#handleColorMapChange);
+    this.#guiFolderColorPoints.add(this, "_setPointsColorMinMaxToFeatureRange").
+      name("Set min/max to feature range");
+
     // 背景色の着色用のコントローラーを追加します。
     this.#bgColorController = this.#guiFolderColor.addColor(
       this.#settings, "bgColor").
       name("Background").onFinishChange(this.#handleBgColorChange);
 
     // 点の大きさや線の太さを設定するためのコントローラーを追加します。
+    this.#annotationFontSizeController = this.#guiFolderSize.add(
+      this.#settings, "annotationFontSize", 0).
+      name("Annotation").onFinishChange(this.#handleAnnotationFontSizeChange);
     this.#cellSizeController = this.#guiFolderSize.add(
       this.#settings, "cellSize", 0).
-      name("Cell").onFinishChange(this.#handleCellSizeChange);
+      name("Cells").onFinishChange(this.#handleCellSizeChange);
     this.#selectionSizeController = this.#guiFolderSize.add(
       this.#settings, "selectionSize", 0).
       name("Selection").onFinishChange(this.#handleSelectionSizeChange);
@@ -365,30 +454,38 @@ class Viewer {
       onFinishChange(this.#handleShowSurfaceChange);
     this.#showCellPointsController = this.#guiFolderView.add(
       this.#settings, "showCellPoints").
-      name("Cell").
+      name("Cells").
       onFinishChange(this.#handleShowCellPointsChange);
     this.#highlightSelectionController = this.#guiFolderView.add(
       this.#settings, "highlightSelection").
       name("Highlight selection").
       onFinishChange(this.#handleHighlightSelectionChange);
+    this.#showGridController = this.#guiFolderView.add(
+      this.#settings, "showGrid").
+      name("Grid").
+      onFinishChange(this.#handleShowGridChange);
 
     // ドラッグによる操作対象を切り替えるドロップダウンメニューを追加します。
     this.#dragActionController = this.#gui.add(
       this.#settings, "dragAction", dragActionList).
       name("Drag action").onFinishChange(this.#handleDragActionChange);
 
-    // 設定のリセット ボタンを追加します。
-    this.#gui.add(this, "_resetSettings").name("Reset settings");
-
     // ビューのリセット ボタンを追加します。
     this.#gui.add(this, "_handleCameraReset").name("Reset camera");
 
     // 経路探索ボタンを追加します。
-    this.#gui.add(this, "_findAndShowPath2d").name("Find 2D path");
-    this.#gui.add(this, "_findAndShowPath3d").name("Find 3D path");
+    this.#guiFolderPath.add(this, "_findAndShowPath2d").name("Find 2D path");
+    this.#guiFolderPath.add(this, "_findAndShowPath3d").name("Find 3D path");
 
     // 画像保存ボタンを追加します。
     this.#gui.add(this, "_saveImage").name("Save image");
+
+    // 設定のリセット ボタンを追加します。
+    this.#guiFolderSettings.add(this, "_resetSettings").name("Initialize");
+    // 設定読み込みボタンを追加します。
+    this.#guiFolderSettings.add(this, "_loadSettings").name("Load...");
+    // 設定保存ボタンを追加します。
+    this.#guiFolderSettings.add(this, "_saveSettings").name("Save");
   }
 
   /**
@@ -451,7 +548,8 @@ class Viewer {
     this.#parentElement = value;
     this.#parentElement.appendChild(this.#canvas);
     this.#parentElement.appendChild(this.#guiElem);
-    this.#parentElement.appendChild(this.#colorbarBox);
+    this.#parentElement.appendChild(this.#colorBarBoxSurface);
+    this.#parentElement.appendChild(this.#colorBarBoxPoints);
     for (const annotationObj of this.#annotationObjList) {
       this.#parentElement.appendChild(annotationObj.element);
     }
@@ -501,6 +599,90 @@ class Viewer {
    */
   set onSelectionChange(func) {
     this.#onSelectionChange = func;
+  }
+
+  /**
+   * Chart を削除します。
+   *
+   * @memberof Viewer
+   */
+  resetChart = () => {
+
+    this.#chart = null;
+  }
+
+  /**
+   * Chart の特徴量を変更します。
+   * 
+   * @memberof Viewer
+   */
+  #updateChart = () => {
+    
+    // Chart が存在しない場合は何もしません。
+    if (this.#chart === null) return;
+
+    const zArray = this.#graph.zArray;
+
+    // データを取得します。
+    const data = [];
+    for (let i of this.#selectedCellList) {
+      // 表示されているパラメーターを取得します。
+      data.push(zArray[i]);
+    }
+
+    this.#chart.data.datasets[0].data = data;
+    this.#chart.options.scales.y.title.text = this.#settings.zFeature;
+
+    this.#chart.update();
+  }
+
+  /**
+   * Chart を作成します。
+   *
+   * @memberof Viewer
+   */
+  drawChart = (context) => {
+
+    const idArray = this.#graph.idArray;
+    const zArray = this.#graph.zArray;
+
+    // 描画データ用の配列を用意します。
+    const labels = [];
+    const data = [];
+    for (let i of this.#selectedCellList) {
+      // 先頭の要素を取得し、X 軸のラベルにします。
+      labels.push(idArray[i]);
+      // 表示されているパラメーターを取得します。
+      data.push(zArray[i]);
+    }
+
+    // グラフを描画します。
+    this.#chart = new Chart(context, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [{
+          data: data,
+          borderColor: 'red',
+        }]
+      },
+      options: {
+        scales: {
+          y: {
+            title: {
+              display: true,
+              text: this.#settings.zFeature
+            }
+          }
+        },
+        plugins: {
+          legend: {
+            display: false
+          },
+        },
+        maintainAspectRatio: false
+      }
+    });
   }
 
   /**
@@ -681,9 +863,9 @@ class Viewer {
    *
    * @memberof Viewer
    */
-  #handleSelectionChange = () => {
+  #handleSelectionChange = (isShowingChart) => {
 
-    this.onSelectionChange();
+    this.onSelectionChange(isShowingChart);
     this.#updateSelectionGeom();
     this.#isShowingPath = false;
     this.#updatePath();
@@ -725,6 +907,7 @@ class Viewer {
     this.#updateGeomZ();
     this.#updateAnnotationPositionWorld();
     this.#updateAnnotationPositionScreen();
+    this.#updateChart();
   }
 
   /**
@@ -740,6 +923,17 @@ class Viewer {
   }
 
   /**
+   * グラフでグリッドの z 座標が変更されたときの処理です。
+   *
+   * @memberof Viewer
+   */
+  #handleGridZChange = () => {
+    if (this.#gridHelper !== null) {
+      this.#gridHelper.position.z = this.#settings.gridZ * this.#settings.zScale;
+    }
+  }
+
+  /**
    * 着色に用いる特徴量の設定が変更されたときの処理です。
    *
    * @memberof Viewer
@@ -749,9 +943,14 @@ class Viewer {
     this.#updateColorMinMaxToNewFeature();
     this.#colorMinController.updateDisplay();
     this.#colorMaxController.updateDisplay();
-    this.#renewColorMapObject();
-    this.#updateGeomColor();
-    this.#updateColorbarDisplay();
+    this.#handleColorMapChange();
+  }
+  #handlePointsColorFeatureChange = () => {
+
+    this.#updatePointsColorMinMaxToNewFeature();
+    this.#pointsColorMinController.updateDisplay();
+    this.#pointsColorMaxController.updateDisplay();
+    this.#handleColorMapChange();
   }
 
   /**
@@ -763,31 +962,7 @@ class Viewer {
 
     this.#renewColorMapObject();
     this.#updateGeomColor();
-    this.#updateColorbarDisplay();
-  }
-
-  /**
-   * カラー マップの最小値の設定が変更されたときの処理です。
-   *
-   * @memberof Viewer
-   */
-  #handleColorMinChange = () => {
-
-    this.#renewColorMapObject();
-    this.#updateGeomColor();
-    this.#updateColorbarDisplay();
-  }
-
-  /**
-   * カラー マップの最大値の設定が変更されたときの処理です。
-   *
-   * @memberof Viewer
-   */
-  #handleColorMaxChange = () => {
-
-    this.#renewColorMapObject();
-    this.#updateGeomColor();
-    this.#updateColorbarDisplay();
+    this.#updateColorBars();
   }
 
   /**
@@ -798,6 +973,14 @@ class Viewer {
   #handleBgColorChange = () => {
 
     this.#updateSceneBgColor();
+  }
+
+  /**
+   * アノテーションの設定が変更されたときの処理です。
+   */
+  #handleAnnotationFontSizeChange = () => {
+
+    this.#updateAnnotationFontSize();
   }
 
   /**
@@ -871,6 +1054,16 @@ class Viewer {
   }
 
   /**
+   * グリッド表示の有無の設定が変更されたときの処理です。
+   * 
+   * @memberof Viewer
+   */
+  #handleShowGridChange = () => {
+
+    this.#updateGridVisibility();
+  }
+
+  /**
    * ドラッグによる操作対象の設定が変更されたときの処理です。
    *
    * @memberof Viewer
@@ -904,8 +1097,8 @@ class Viewer {
     // 指定された位置から画面奥に向かって光線を発し、
     // 交点を作るオブジェクトを探します。
     const position = new THREE.Vector2(x, y);
-    this.#raycaster.setFromCamera(position, this.#camera);
-    const intersectArray = this.#raycaster.intersectObject(this.#cellPoints);
+    this.#rayCaster.setFromCamera(position, this.#camera);
+    const intersectArray = this.#rayCaster.intersectObject(this.#cellPoints);
 
     // 何もないところをクリックした場合です。
     if (intersectArray.length === 0) {
@@ -964,8 +1157,8 @@ class Viewer {
 
     // Frustum 中に含まれるジオメトリ中の点 (ただし、描画中) を調べます。
     const frustum = selectionBox.frustum;
-    const drawnPointSet = new Set(this.#geom.index.array);
-    const positions =  this.#geom.getAttribute("position").array;
+    const drawnPointSet = new Set(this.#geomSurface.index.array);
+    const positions = this.#geom.getAttribute("position").array;
     // 点の座標を格納する 3 次元ベクトルです。
     const point = new THREE.Vector3();
     // メッシュが回転または移動されていた場合に備えて変換行列を取得します。
@@ -975,7 +1168,7 @@ class Viewer {
     // ジオメトリ中の点の座標をループします。
     for (const i of drawnPointSet) {
       // x, y, z 座標を取得します。
-      point.set(positions[3 * i], positions[3*i + 1], positions[3*i + 2]);
+      point.set(positions[3 * i], positions[3 * i + 1], positions[3 * i + 2]);
       // 変換行列を作用させます。
       point.applyMatrix4(matrixWorld);
       // Frustum 中に点が含まれていればリストに追加します。
@@ -1016,8 +1209,8 @@ class Viewer {
     const canvasH = canvasRect.height;
 
     // NDC 座標に変換します。
-    const ndcX = canvasX/canvasW*2 - 1;
-    const ndcY = -canvasY/canvasH*2 + 1;
+    const ndcX = canvasX / canvasW * 2 - 1;
+    const ndcY = -canvasY / canvasH * 2 + 1;
 
     return [ndcX, ndcY];
   }
@@ -1105,22 +1298,21 @@ class Viewer {
 
     // z 座標の登りを禁止して見つからなかった場合は始点と終点を逆にして
     // もう一度探索します。
-    if (disableClimb && ! path.length) {
+    if (disableClimb && !path.length) {
       path = PathFinder.find(
         this.#graph.edgeListArray, iGoalNode, iStartNode, disableClimb
       );
     }
 
     // 見つからなかった場合はメッセージを表示して終了します。
-    if (! path.length) {
+    if (!path.length) {
       window.alert(pathDoesNotExistMessage);
       return;
     }
 
     // 以下、経路が見つかった場合です。
     this.#selectedCellList = path;
-
-    this.#handleSelectionChange();
+    this.#handleSelectionChange(true);
 
     // 可視化フラグをオンにし、経路を可視化する処理を呼びます。
     this.#isShowingPath = true;
@@ -1137,8 +1329,15 @@ class Viewer {
     this.#settings.resetColorMinMax();
     this.#colorMinController.updateDisplay();
     this.#colorMaxController.updateDisplay();
-    this.#handleColorMinChange();
-    this.#handleColorMaxChange();
+    this.#handleColorMapChange();
+  }
+
+  _setPointsColorMinMaxToFeatureRange = () => {
+
+    this.#settings.resetPointsColorMinMax();
+    this.#pointsColorMinController.updateDisplay();
+    this.#pointsColorMaxController.updateDisplay();
+    this.#handleColorMapChange();
   }
 
   /**
@@ -1147,12 +1346,18 @@ class Viewer {
    * @memberof Viewer
    */
   _resetSettings = () => {
-
     // 設定をリセットします。
     this.#settings.reset();
+    // GUI を更新します。
+    this._updateGUI();
+  }
 
-    // GUI に設定の現在値を反映させます。
-    // 加えて、設定の変更を描画等に反映させます。
+  /**
+   * GUI に設定の現在値を反映させます。
+   * 加えて、設定の変更を描画等に反映させます。
+   */
+  _updateGUI = () => {
+
     this.#threshTypeController.updateDisplay();
     this.#handleThreshTypeChange();
 
@@ -1168,20 +1373,27 @@ class Viewer {
     this.#zScaleController.updateDisplay();
     this.#handleZScaleChange();
 
+    this.#gridZController.updateDisplay();
+    this.#handleGridZChange();
+
     this.#colorFeatureController.updateDisplay();
     this.#handleColorFeatureChange();
+    this.#pointsColorFeatureController.updateDisplay();
+    this.#handlePointsColorFeatureChange();
 
     this.#colorMapController.updateDisplay();
-    this.#handleColorMapChange();
-
     this.#colorMinController.updateDisplay();
-    this.#handleColorMinChange();
-
     this.#colorMaxController.updateDisplay();
-    this.#handleColorMaxChange();
+    this.#pointsColorMapController.updateDisplay();
+    this.#pointsColorMinController.updateDisplay();
+    this.#pointsColorMaxController.updateDisplay();
+    this.#handleColorMapChange();
 
     this.#bgColorController.updateDisplay();
     this.#handleBgColorChange();
+
+    this.#annotationFontSizeController.updateDisplay();
+    this.#handleAnnotationFontSizeChange();
 
     this.#cellSizeController.updateDisplay();
     this.#handleCellSizeChange();
@@ -1204,6 +1416,9 @@ class Viewer {
     this.#highlightSelectionController.updateDisplay();
     this.#handleHighlightSelectionChange();
 
+    this.#showGridController.updateDisplay();
+    this.#handleShowGridChange();
+
     this.#dragActionController.updateDisplay();
     this.#handleDragActionChange();
 
@@ -1212,7 +1427,7 @@ class Viewer {
   }
 
   /**
-   * 描画されている細胞地図を画像として保存するためのダイアログを表示します。
+   * 描画されている細胞地図を画像として保存します。
    *
    * @memberof Viewer
    */
@@ -1231,19 +1446,12 @@ class Viewer {
     // parentElement を <canvas> 要素に変換し、保存します。
     html2canvas(this.parentElement, options).then(canvas => {
       canvas.toBlob(
-        function(result) {
-  
+        function (result) {
+
           const imageUrl = URL.createObjectURL(result);
 
-          // タイムスタンプを含むファイル名を生成します。
-          const date = new Date();
-          const yyyy = date.getFullYear();
-          const MM = ("0" + (date.getMonth() + 1)).slice(-2);
-          const dd = ("0" + date.getDate()).slice(-2);
-          const HH = ("0" + date.getHours()).slice(-2);
-          const mm = ("0" + date.getMinutes()).slice(-2);
-          const ss = ("0" + date.getSeconds()).slice(-2);
-          const fileName = "cellmap" + yyyy + MM + dd + HH + mm + ss + ".png";
+          // タイムスタンプ付きのファイル名を生成します。
+          const fileName = formatDateTime(new Date()) + "-CellMap.png";
 
           // ダウンロード用の使い捨てリンクを用意し、
           // クリック時の動作を呼び出します。
@@ -1251,7 +1459,7 @@ class Viewer {
           a.download = fileName;
           a.href = imageUrl;
           a.click();
-  
+
           URL.revokeObjectURL(imageUrl);
         }
       );
@@ -1259,6 +1467,67 @@ class Viewer {
 
     // GUI を再表示します。
     this.#gui.show();
+  }
+
+
+  /**
+   * 設定を JSON ファイルとして保存します。
+   *
+   * @memberof Viewer
+   */
+  _saveSettings = () => {
+    // CSV ファイルを保存します。
+    var blob = new Blob([JSON.stringify(this.#settings, null, "  ")], { type: "application/json" });
+    var link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    // 日時からファイル名を作成します。
+    link.download = formatDateTime(new Date()) + "-Config.json";
+    link.click();
+  }
+
+  /**
+   * 設定ファイルを読み込みます。
+   */
+  _loadSettings = () => {
+
+    // JSON ファイル入力ダイアログボックスを開きます。
+    var input = document.createElement("input");
+    input.type = "file";
+    input.accept = "application/json";
+
+    input.onchange = e => {
+
+      // 選択されたファイルを取得します。
+      var file = e.target.files[0];
+
+      // ファイルの内容をテキストとして読み込みます。
+      var reader = new FileReader();
+      reader.readAsText(file);
+
+      // 読み込み完了後、JSON をパースして GUI に反映します。
+      reader.onload = readerEvent => {
+        // JSON をパースします。
+        var json = JSON.parse(readerEvent.target.result);
+        this.#settings.resetBy(json)
+        // GUI を更新します。
+        this._updateGUI();
+      }
+    }
+
+    input.click();
+  }
+
+  /**
+   * 日時を日付文字列に変換する関数です。
+   */
+  formatDateTime = (date) => {
+    const yyyy = date.getFullYear();
+    const MM = ("0" + (date.getMonth() + 1)).slice(-2);
+    const dd = ("0" + date.getDate()).slice(-2);
+    const HH = ("0" + date.getHours()).slice(-2);
+    const mm = ("0" + date.getMinutes()).slice(-2);
+    const ss = ("0" + date.getSeconds()).slice(-2);
+    return yyyy + MM + dd + "-" + HH + mm + ss;
   }
 
   /**
@@ -1317,12 +1586,19 @@ class Viewer {
 
     // 設定の着色用の特徴量がグラフに存在しない場合は、
     // 設定を既定値に戻します。
-    if (! this.#graph.zFeatureLabelList.includes(
-        this.#settings.colorFeature
+    if (!this.#graph.zFeatureLabelList.includes(
+      this.#settings.colorFeature
     )) {
       this.#settings.colorFeature = defaultColorFeatureLabel;
       // GUI に反映させます。
       this.#colorFeatureController.updateDisplay();
+    }
+    if (!this.#graph.zFeatureLabelList.includes(
+      this.#settings.pointsColorFeature
+    )) {
+      this.#settings.pointsColorFeature = defaultColorFeatureLabel;
+      // GUI に反映させます。
+      this.#pointsColorFeatureController.updateDisplay();
     }
 
     // グラフに存在する特徴量の種類を GUI のオプションに反映します。
@@ -1332,6 +1608,9 @@ class Viewer {
     this.#colorFeatureController = this.#colorFeatureController.
       options(this.#graph.zFeatureLabelList).
       name("Feature").onFinishChange(this.#handleColorFeatureChange);
+    this.#pointsColorFeatureController = this.#pointsColorFeatureController.
+      options(this.#graph.zFeatureLabelList).
+      name("Feature").onFinishChange(this.#handlePointsColorFeatureChange);
 
     // 座標を設定します。
     // グラフの x、y、z 座標を取得します。
@@ -1340,36 +1619,44 @@ class Viewer {
     // z 軸のスケールです。
     const zScale = this.#settings.zScale;
 
+    // x と y の最大値と最小値を取得します。
+    var minX = Infinity;
+    var minY = Infinity;
+    var maxX = -Infinity;
+    var maxY = -Infinity;
+
     // 各ノードを 3 次元ベクトルに変換し、
     // そのベクトル群をジオメトリに設定します。
     const points3d = [];
     for (let i = 0; i < this.#graph.nNode; i++) {
-      points3d.push(
-        new THREE.Vector3(xyArray[i][0], xyArray[i][1], zArray[i] * zScale)
-      );
+      const [x, y] = xyArray[i];
+      // 3D ベクトルを設定します。
+      points3d.push(new THREE.Vector3(x, y, zArray[i] * zScale));
+      // x, y の最大値と最小値を取得します。
+      if (minX > x) minX = x;
+      if (minY > y) minY = y;
+      if (maxX < x) maxX = x;
+      if (maxY < y) maxY = y;
     }
+    this.#geomSurface.setFromPoints(points3d);
     this.#geom.setFromPoints(points3d);
+
+    // グリッドを更新します。
+    this.#gridHelper = new GridSegments(minX, minY, maxX, maxY);
 
     // 点の数がそれまでのデータと異なった場合に備えて、
     // ジオメトリの normal 属性を削除しておきます。
     // (しないと ジオメトリの computeVertexNormals メソッドで
     //  既存の normal 属性の配列がサイズ変更されないまま使いまわされます。)
+    this.#geomSurface.deleteAttribute("normal");
     this.#geom.deleteAttribute("normal");
 
     // 三角形分割を設定します。
     this.#updateGeomIndex();
     this.#updateGeomDrawRange();
 
-    // 色を設定します。
-    this.#geom.setAttribute("color", new THREE.BufferAttribute(
-      new Float32Array(this.#graph.nNode * 3), 3
-    ));
-    this.#updateColorMinMaxToNewFeature();
-    this.#colorMinController.updateDisplay();
-    this.#colorMaxController.updateDisplay();
-    this.#renewColorMapObject();
-    this.#updateGeomColor();
-    this.#updateColorbarDisplay();
+    // グリッドを設定に応じて表示します。
+    this.#updateGridVisibility();
 
     // 選択されている細胞があればクリアします。
     this.#selectedCellList = [];
@@ -1385,6 +1672,22 @@ class Viewer {
     }
     this.#updateAnnotationVisibility();
 
+    // 色を設定します。
+    this.#geomSurface.setAttribute("color", new THREE.BufferAttribute(
+      new Float32Array(this.#graph.nNode * 3), 3
+    ));
+    this.#geom.setAttribute("color", new THREE.BufferAttribute(
+      new Float32Array(this.#graph.nNode * 3), 3
+    ));
+    this.#updateColorMinMaxToNewFeature();
+    this.#colorMinController.updateDisplay();
+    this.#colorMaxController.updateDisplay();
+    this.#updatePointsColorMinMaxToNewFeature();
+    this.#pointsColorMinController.updateDisplay();
+    this.#pointsColorMaxController.updateDisplay();
+    this.#handleColorMapChange();
+
+    // コールバックします。
     this.onLoaded();
   }
 
@@ -1423,6 +1726,7 @@ class Viewer {
       labelElem.style.cursor = "pointer";
       labelElem.style.fontFamily = this.#fontFamily;
       labelElem.style.backgroundColor = "#ffffffcc";
+      labelElem.style.fontSize = this.#settings.annotationFontSize + "px";
       labelElem.style.padding = "2px 4px";
       labelElem.style.display = "flex";
       labelElem.style.position = "absolute";
@@ -1431,8 +1735,8 @@ class Viewer {
       // ※座標の指定は appendChild 以降である必要があります。
       const width = labelElem.offsetWidth;
       const height = labelElem.offsetHeight;
-      labelElem.style.left = (-0.5*width).toFixed(0) + "px";
-      labelElem.style.top = (-0.5*height).toFixed(0) + "px";
+      labelElem.style.left = (-0.5 * width).toFixed(0) + "px";
+      labelElem.style.top = (-0.5 * height).toFixed(0) + "px";
 
       // 右クリックとホイール操作を無効にします。
       labelElem.addEventListener("contextmenu", (event) => {
@@ -1461,8 +1765,32 @@ class Viewer {
 
       // アノテーションの情報を管理するためのオブジェクトをリストに追加します。
       this.#annotationObjList.push(
-        {annotation: annotation, element: labelElem}
+        { annotation: annotation, element: labelElem }
       );
+    }
+
+    // 背景色を設定します。
+    // this.#updateAnnotationBgColor();
+  }
+
+  /**
+   * アノテーションの背景色を更新します。
+   */
+  #updateAnnotationBgColor = () => {
+
+    // 設定された背景色を取得します。
+    var bgColor = this.#settings.bgColor;
+    var color = new THREE.Color(
+      bgColor[0] / 255.0,
+      bgColor[1] / 255.0,
+      bgColor[2] / 255.0);
+
+    // 背景色を半透明にします。
+    var hexColor = "#" + color.getHexString() + "a0";
+
+    // アノテーションに反映します。
+    for (const annotationObj of this.#annotationObjList) {
+      annotationObj.element.style.backgroundColor = hexColor;
     }
   }
 
@@ -1502,6 +1830,10 @@ class Viewer {
       this.#settings.colorMap,
       this.#settings.colorMin, this.#settings.colorMax
     );
+    this.#pointsColorMap = new ColorMap(
+      this.#settings.pointsColorMap,
+      this.#settings.pointsColorMin, this.#settings.pointsColorMax
+    );
   }
 
   /**
@@ -1519,7 +1851,7 @@ class Viewer {
     // 選択中の細胞を強調表示するためのジオメトリを作成します。
 
     // 全細胞のジオメトリの座標配列を取り出します。
-    const allPositions =  this.#geom.getAttribute("position").array;
+    const allPositions = this.#geom.getAttribute("position").array;
     // 座標配列中のインデックスを格納する変数です。
     let iInAllPositions = 0;
     // 選択中の細胞の座標ベクトルを格納する配列です。
@@ -1557,16 +1889,19 @@ class Viewer {
     // 表示する場合で、シーンにメッシュが属していなければシーンに追加します。
     if (
       this.#settings.showSurface &&
-      ! this.#scene.children.includes(this.#mesh)
+      !this.#scene.children.includes(this.#mesh)
     ) {
       this.#scene.add(this.#mesh);
     }
     else if (
-      ! this.#settings.showSurface &&
+      !this.#settings.showSurface &&
       this.#scene.children.includes(this.#mesh)
     ) {
       this.#scene.remove(this.#mesh);
     }
+
+    // カラーバーの表示、非表示を連動させます。
+    this.#updateColorBarVisibility();
   }
 
   /**
@@ -1579,17 +1914,20 @@ class Viewer {
     // 表示する場合で、シーンに点群が属していなければシーンに追加します。
     if (
       this.#settings.showCellPoints &&
-      ! this.#scene.children.includes(this.#cellPoints)
+      !this.#scene.children.includes(this.#cellPoints)
     ) {
       this.#scene.add(this.#cellPoints);
     }
     // 表示しない場合で、シーンに点群が属していればシーンから削除します。
     else if (
-      ! this.#settings.showCellPoints &&
+      !this.#settings.showCellPoints &&
       this.#scene.children.includes(this.#cellPoints)
     ) {
       this.#scene.remove(this.#cellPoints);
     }
+
+    // カラーバーの表示、非表示を連動させます。
+    this.#updateColorBarVisibility();
   }
 
   /**
@@ -1602,16 +1940,42 @@ class Viewer {
     // 表示する場合で、シーンに点群が属していなければシーンに追加します。
     if (
       this.#settings.highlightSelection &&
-      ! this.#scene.children.includes(this.#selectedCellPoints)
+      !this.#scene.children.includes(this.#selectedCellPoints)
     ) {
       this.#scene.add(this.#selectedCellPoints);
     }
     // 表示しない場合で、シーンに点群が属していればシーンから削除します。
     else if (
-      ! this.#settings.highlightSelection &&
+      !this.#settings.highlightSelection &&
       this.#scene.children.includes(this.#selectedCellPoints)
     ) {
       this.#scene.remove(this.#selectedCellPoints);
+    }
+  }
+
+  /**
+   * 設定に従い、グリッド表示の有無を切り替えます。
+   *
+   * @memberof Viewer
+   */
+  #updateGridVisibility = () => {
+
+    // グリッド未作成の場合はなにもしません。
+    if (!this.#gridHelper) return;
+
+    // 表示する場合で、シーンにグリッドが属していなければシーンに追加します。
+    if (
+      this.#settings.showGrid &&
+      !this.#scene.children.includes(this.#gridHelper)
+    ) {
+      this.#scene.add(this.#gridHelper);
+    }
+    // 表示しない場合で、シーンにグリッドが属していればシーンから削除します。
+    else if (
+      !this.#settings.showGrid &&
+      this.#scene.children.includes(this.#gridHelper)
+    ) {
+      this.#scene.remove(this.#gridHelper);
     }
   }
 
@@ -1661,9 +2025,12 @@ class Viewer {
       return;
     }
 
-    this.#geom.setIndex(
+    this.#geomSurface.setIndex(
       new THREE.BufferAttribute(this.#graph.sortedTriangles, 1)
     );
+    this.#geomSurface.computeVertexNormals();
+    this.#geomSurface.computeBoundingBox();
+    this.#geomSurface.computeBoundingSphere();
     this.#geom.computeVertexNormals();
     this.#geom.computeBoundingBox();
     this.#geom.computeBoundingSphere();
@@ -1682,7 +2049,7 @@ class Viewer {
       return;
     }
 
-    this.#geom.setDrawRange(0, 3 * this.#graph.nEnabledTriangles)
+    this.#geomSurface.setDrawRange(0, 3 * this.#graph.nEnabledTriangles)
   }
 
   /**
@@ -1698,6 +2065,15 @@ class Viewer {
     }
 
     this.#graph.zFeatureType = this.#settings.zFeature;
+  }
+
+  /**
+   * z 座標に用いる特徴量の種類を表す文字列を取得します。
+   *
+   * @memberof Viewer
+   */
+  get zFeatureType() {
+    return this.#settings.zFeature;
   }
 
   /**
@@ -1718,12 +2094,11 @@ class Viewer {
     }
 
     // 経路表示中フラグがオフであれば、終了します。
-    if (! this.#isShowingPath) {
+    if (!this.#isShowingPath) {
       return;
     }
 
     // 経路表示中フラグがオンであれば、選択されている細胞を結ぶ経路を表示します。
-
     // 選択中の細胞のジオメトリを使用して経路の辺を強調表示し、シーンに追加します。
     const meshLine = new MeshLine();
     meshLine.setGeometry(this.#selectedCellGeom);
@@ -1745,6 +2120,7 @@ class Viewer {
 
     // 更新の対象となる、ジオメトリの座標配列です。
     const positions = this.#geom.getAttribute("position").array;
+    const surfacePositions = this.#geomSurface.getAttribute("position").array;
 
     // 更新に用いる、グラフの特徴量です。
     const zFeature = this.#graph.zArray;
@@ -1753,9 +2129,14 @@ class Viewer {
     let iZPosition = 0;
     const scale = this.#settings.zScale;
     for (let i = 0; i < zFeature.length; i++) {
-      iZPosition = 3*i + 2;
+      iZPosition = 3 * i + 2;
       positions[iZPosition] = zFeature[i] * scale;
+      surfacePositions[iZPosition] = zFeature[i] * scale;
     }
+    this.#geomSurface.getAttribute("position").needsUpdate = true;
+    this.#geomSurface.computeVertexNormals();
+    this.#geomSurface.computeBoundingBox();
+    this.#geomSurface.computeBoundingSphere();
     this.#geom.getAttribute("position").needsUpdate = true;
     this.#geom.computeVertexNormals();
     this.#geom.computeBoundingBox();
@@ -1787,18 +2168,59 @@ class Viewer {
     const colorFeature = this.#graph.getZFeatureArrayByName(
       this.#settings.colorFeature
     );
+    const pointsColorFeature = this.#graph.getZFeatureArrayByName(
+      this.#settings.pointsColorFeature
+    );
+
     // 設定対象の、ジオメトリの各頂点の RGB を表す配列です。
     const colors = this.#geom.getAttribute("color").array;
+    const surfaceColors = this.#geomSurface.getAttribute("color").array;
     // 設定対象の配列におけるインデックスを代入するための変数です。
     let iColors = 0;
 
+    // // アノテーションの文字色を更新するための辞書を作成します。
+    // // 各アノテーションに属する細胞の数、特徴量の合計を記録する辞書です。
+    // const countDict = {};
+    // const featureSumDict = {};
+    // for (const annotation of this.#graph.annotationSet) {
+    //   countDict[annotation] = 0;
+    //   featureSumDict[annotation] = 0;
+    // }
+
     // 各細胞の特徴量をループしつつ、ジオメトリの色配列を更新します。
     for (let i = 0; i < colorFeature.length; i++) {
+
+      // 色配列を更新します。
       iColors = 3 * i;
-      [colors[iColors], colors[iColors + 1], colors[iColors + 2]] =
+      [surfaceColors[iColors], surfaceColors[iColors + 1], surfaceColors[iColors + 2]] =
         this.#colorMap.get0to1RgbAgainstMinMax(colorFeature[i]);
     }
+    for (let i = 0; i < pointsColorFeature.length; i++) {
+
+      // 色配列を更新します。
+      iColors = 3 * i;
+      [colors[iColors], colors[iColors + 1], colors[iColors + 2]] =
+        this.#pointsColorMap.get0to1RgbAgainstMinMax(pointsColorFeature[i]);
+
+      // // アノテーションごとに特徴量の合計を算出します。
+      // const annotation = this.#graph.annotationArray[i];
+      // countDict[annotation]++;
+      // featureSumDict[annotation] += colorFeature[i];
+    }
+
     this.#geom.getAttribute("color").needsUpdate = true;
+    this.#geomSurface.getAttribute("color").needsUpdate = true;
+
+    // // 各アノテーションの平均 x、y、z 座標の情報を登録します。
+    // for (const annotationObj of this.#annotationObjList) {
+
+    //   const annotation = annotationObj.annotation;
+    //   const z = featureSumDict[annotation] / countDict[annotation];
+    //   // z 座標の値から文字色を設定します。
+    //   const color = new THREE.Color().fromArray(
+    //     this.#colorMap.get0to1RgbAgainstMinMax(z));
+    //   annotationObj.element.style.color = "#" + color.getHexString();
+    // }
   }
 
   /**
@@ -1821,8 +2243,8 @@ class Viewer {
     const oldMaxDefault = this.#settings.colorMaxDefault;
     const oldRangeDefault = (
       oldMinDefault === oldMaxDefault ?
-      Number.MIN_VALUE :
-      oldMaxDefault - oldMinDefault
+        Number.MIN_VALUE :
+        oldMaxDefault - oldMinDefault
     );
 
     // 特徴量の最小値と最大値を、カラー マップの最小値と最大値の既定値とします。
@@ -1852,36 +2274,114 @@ class Viewer {
       );
     }
   }
+  #updatePointsColorMinMaxToNewFeature = () => {
+
+    // データが読み込まれていない場合には何もしません。
+    if (this.#graph === null) {
+      return;
+    }
+
+    // 更新前のカラー マップの最小値と最大値とその既定値を記録しておきます。
+    const oldMin = this.#settings.pointsColorMin;
+    const oldMax = this.#settings.pointsColorMax;
+    const oldMinDefault = this.#settings.pointsColorMinDefault;
+    const oldMaxDefault = this.#settings.pointsColorMaxDefault;
+    const oldRangeDefault = (
+      oldMinDefault === oldMaxDefault ?
+        Number.MIN_VALUE :
+        oldMaxDefault - oldMinDefault
+    );
+
+    // 特徴量の最小値と最大値を、カラー マップの最小値と最大値の既定値とします。
+    const feature = this.#graph.getZFeatureArrayByName(
+      this.#settings.pointsColorFeature
+    );
+    const getMin = (a, b) => Math.min(a, b);
+    const getMax = (a, b) => Math.max(a, b);
+    const newMinDefault = feature.reduce(getMin);
+    const newMaxDefault = feature.reduce(getMax);
+
+    const newMin = normalizeToNewFeature.call(this, oldMin);
+    const newMax = normalizeToNewFeature.call(this, oldMax);
+
+    this.#settings.pointsColorMin = newMin;
+    this.#settings.pointsColorMax = newMax;
+    this.#settings.pointsColorMinDefault = newMinDefault;
+    this.#settings.pointsColorMaxDefault = newMaxDefault;
+
+    function normalizeToNewFeature(number) {
+      return (
+        newMinDefault +
+        (
+          (newMaxDefault - newMinDefault) * (number - oldMinDefault) /
+          (oldRangeDefault)
+        )
+      );
+    }
+  }
+
+  /**
+   * 2 本のカラーバーを更新します。
+   * 
+   * @memberof Viewer
+   */
+  #updateColorBars = () => {
+
+    this.#updateColorBarDisplay("Surface", this.#colorBarBoxSurface, this.#colorMap);
+    this.#updateColorBarDisplay("Cells", this.#colorBarBoxPoints, this.#pointsColorMap);
+  }
+
+  /**
+   * 2 本のカラーバーの可視化状態を更新します。
+   * 
+   * @memberof Viewer
+   */
+  #updateColorBarVisibility = () => {
+
+    this.#colorBarBoxSurface.style.display = this.#settings.showSurface ? "flex" : "none";
+    this.#colorBarBoxPoints.style.display = this.#settings.showCellPoints ? "flex" : "none";
+  }
 
   /**
    * 設定に従い、カラー バーの表示を更新します。
    *
    * @memberof Viewer
    */
-  #updateColorbarDisplay = () => {
+  #updateColorBarDisplay = (barName, colorBarBox, colorMap) => {
 
     // カラー バー表示領域をクリアします。
-    while (this.#colorbarBox.firstChild) {
-      this.#colorbarBox.removeChild(this.#colorbarBox.firstChild);
+    while (colorBarBox.firstChild) {
+      colorBarBox.removeChild(colorBarBox.firstChild);
     }
+
+    // カラーバー名を表示するためのボックス要素です。
+    const name = document.createElement("div");
+    name.style.position = "absolute";
+    name.style.top = "0";
+    name.style.left = "10px";
+    name.style.margin = "3px";
+    name.style.padding = "2px 4px";
+    name.style.backgroundColor = "#00000060";
+    name.innerText = barName;
+    colorBarBox.appendChild(name);
 
     // カラー バーを描画します。
     // 長方形で、上から下にかけてカラー マップの 1 ～ 0 に対応する色を設定します。
 
     // 描画のためのキャンバス要素を用意します。
-    const colorbarCanvas = document.createElement("canvas");
-    colorbarCanvas.width = 16;
-    colorbarCanvas.height = 255;
-    colorbarCanvas.style.border = "1px solid white";
-    colorbarCanvas.style.margin = "8px 0 8px 8px";
-    this.#colorbarBox.appendChild(colorbarCanvas);
+    const colorBarCanvas = document.createElement("canvas");
+    colorBarCanvas.width = 16;
+    colorBarCanvas.height = 200;
+    colorBarCanvas.style.border = "1px solid white";
+    colorBarCanvas.style.margin = "40px 0 8px 8px";
+    colorBarBox.appendChild(colorBarCanvas);
 
     // キャンバス要素の各ピクセルの色を設定します。
 
     // 設定対象を取得します。
-    const context = colorbarCanvas.getContext("2d");
+    const context = colorBarCanvas.getContext("2d");
     const imageData = context.getImageData(
-      0, 0, colorbarCanvas.width, colorbarCanvas.height
+      0, 0, colorBarCanvas.width, colorBarCanvas.height
     );
 
     const width = imageData.width;
@@ -1896,12 +2396,12 @@ class Viewer {
     // キャンバスの縦の座標ごとにカラー マップから RGB を求めます。
     for (let y = 0; y < height; y++) {
 
-      relativeHeight = 1 - (y / (height-1));
-      [r, g, b] = this.#colorMap.get8bitRgbFrom0to1Number(relativeHeight);
+      relativeHeight = 1 - (y / (height - 1));
+      [r, g, b] = colorMap.get8bitRgbFrom0to1Number(relativeHeight);
 
       // 縦の座標が同じピクセルの色を設定します。
       for (let x = 0; x < width; x++) {
-        const base = (width*y + x) * 4;
+        const base = (width * y + x) * 4;
         imageData.data[base] = r;
         imageData.data[base + 1] = g;
         imageData.data[base + 2] = b;
@@ -1918,24 +2418,27 @@ class Viewer {
     const axisBox = document.createElement("div");
     axisBox.style.position = "relative";
     axisBox.style.paddingLeft = "4px";
-    this.#colorbarBox.appendChild(axisBox);
+    colorBarBox.appendChild(axisBox);
 
     // カラーバーが示す特徴量の最大値と最小値を取得します。
 
     // カラーバーが示す最大値を表示するためのボックス要素です。
     const maxBox = document.createElement("div");
-    maxBox.style.width = "100px";
+
     maxBox.style.position = "absolute";
-    maxBox.style.top = "0";
-    maxBox.innerText = this.#colorMap.max.toExponential(2);
+    maxBox.style.top = "27px";
+    maxBox.style.padding = "2px 4px";
+    maxBox.style.backgroundColor = "#00000060";
+    maxBox.innerText = colorMap.max.toExponential(2);
     axisBox.appendChild(maxBox);
 
     // カラーバーが示す最小値を表示するためのボックス要素です。
     const minBox = document.createElement("div");
-    minBox.style.width = "100px";
     minBox.style.position = "absolute";
     minBox.style.bottom = "0";
-    minBox.innerText = this.#colorMap.min.toExponential(2);
+    minBox.style.padding = "2px 4px";
+    minBox.style.backgroundColor = "#00000060";
+    minBox.innerText = colorMap.min.toExponential(2);
     axisBox.appendChild(minBox);
   }
 
@@ -1946,9 +2449,12 @@ class Viewer {
    */
   #updateSceneBgColor = () => {
 
-    this.#scene.background.r = this.#settings.bgColor[0] / 255;
-    this.#scene.background.g = this.#settings.bgColor[1] / 255;
-    this.#scene.background.b = this.#settings.bgColor[2] / 255;
+    this.#scene.background.r = this.#settings.bgColor[0] / 255.0;
+    this.#scene.background.g = this.#settings.bgColor[1] / 255.0;
+    this.#scene.background.b = this.#settings.bgColor[2] / 255.0;
+
+    // アノテーションの背景色も更新します。
+    // this.#updateAnnotationBgColor();
   }
 
   /**
@@ -1982,7 +2488,7 @@ class Viewer {
     }
 
     // x、y、z 座標を取得する元となる配列です。
-    const positions =  this.#geom.getAttribute("position").array;
+    const positions = this.#geom.getAttribute("position").array;
 
     // 各細胞をループして、
     // 各アノテーションに属する細胞をカウントするとともに、
@@ -1991,9 +2497,9 @@ class Viewer {
 
       const annotation = this.#graph.annotationArray[i];
       countDict[annotation]++;
-      xSumDict[annotation] += positions[3*i];
-      ySumDict[annotation] += positions[3*i + 1];
-      zSumDict[annotation] += positions[3*i + 2];
+      xSumDict[annotation] += positions[3 * i];
+      ySumDict[annotation] += positions[3 * i + 1];
+      zSumDict[annotation] += positions[3 * i + 2];
     }
 
     // 各アノテーションの平均 x、y、z 座標の情報を登録します。
@@ -2053,6 +2559,16 @@ class Viewer {
     // 非表示にする場合です。
     else {
       this.#hideAnnotations();
+    }
+  }
+
+  /**
+   * 設定に従ってアノテーションのフォント サイズを更新します。
+   */
+  #updateAnnotationFontSize = () => {
+
+    for (const annotationObj of this.#annotationObjList) {
+      annotationObj.element.style.fontSize = this.#settings.annotationFontSize + "px";
     }
   }
 

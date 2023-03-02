@@ -179,7 +179,7 @@ class CellMapDataReader {
     const xyArray = []; // [[x, y]] (2 次元配列です。)
     const potentialArray = new Float64Array(nNode); // Potential
 
-    // 上記と Annotation 以外のその他の特徴量を格納する連想配列を準備します。
+    // 上記以外のその他の特徴量を格納する連想配列を準備します。
     const otherFeatureArrayDict = {};
     for (const i of iOtherFeatureColList) {
       otherFeatureArrayDict[header[i]] = new Float64Array(nNode);

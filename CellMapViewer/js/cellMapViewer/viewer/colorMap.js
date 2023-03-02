@@ -92,6 +92,12 @@ class ColorMap {
         case coolwarmLabel:
           this.#nameInMatplotlib = "coolwarm";
           return;
+        case cubeHelixLabel:
+          this.#nameInMatplotlib = "cubehelix";
+          return;
+        case gistNcarLabel:
+          this.#nameInMatplotlib = "gist_ncar";
+          return;
         default:
           // ここに到達することはないはずですが、
           // 到達した場合にわかりやすいよう例外を投げます。
@@ -121,6 +127,12 @@ class ColorMap {
           this.#reverseInMatplotlib = false;
           return;
         case coolwarmLabel:
+          this.#reverseInMatplotlib = false;
+          return;
+        case cubeHelixLabel:
+          this.#reverseInMatplotlib = false;
+          return;
+        case gistNcarLabel:
           this.#reverseInMatplotlib = false;
           return;
         default:
@@ -256,7 +268,7 @@ class ColorMap {
    */
   static #get8bitGrayBlueFrom0to1Number = (number) => {
 
-    const lightgrayPart = (1-number) * 145;
-    return [lightgrayPart, lightgrayPart, lightgrayPart + number*255];
+    const lightGrayPart = (1-number) * 145;
+    return [lightGrayPart, lightGrayPart, lightGrayPart + number*255];
   }
 }
