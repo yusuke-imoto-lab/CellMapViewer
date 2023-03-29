@@ -48,7 +48,7 @@ A sample data is available [here](https://www.dropbox.com/s/aqjrpeos4auvycy/Cell
 </ul>
 <p class="en-indent">Furthermore, it automatically shows the information of the selected cells, including the coordinates and the features, as well as statistics such as mean.</p>
 <h2 id="user-interface">User interface</h2>
-<img class="figure" style="width: 816px; height: 607px;" src="img/whole_gui.png">
+<img class="figure" style="width: 816px; height: 607px;" src="CellMapViewer/img/whole_gui.png">
 <h3 id="links-to-manuals">(1) Links to the manuals and sample data</h3>
 <p class="en-indent">English- and Japanese-versions are available.</p>
 <h3 id="file-selection-area">(2) File selection area</h3>
@@ -87,12 +87,12 @@ A sample data is available [here](https://www.dropbox.com/s/aqjrpeos4auvycy/Cell
 <h2 id="how-to-visualize">Visualizing your cell map data</h2>
 <p class="no-indent">Once the input file is selected via <a href="#file-selection-area">file selection area</a>, the data is automatically displayed based on the current settings.</p>
 <h2 id="how-to-read">Reading a cell map</h2>
-<img class="figure" style="width: 800px; height: 440px;" src="img/visualized_cell_map.png">
+<img class="figure" style="width: 800px; height: 440px;" src="CellMapViewer/img/visualized_cell_map.png">
 <h3 id="color-bar">(1) Color bar</h3>
 <p class="en-indent">The color map with the maximum and the minimum values of the feature selected in <a href="#color">[Color]</a> &gt; <a href="#surface">[Surface]</a> and <a href="#color">[Color]</a> &gt; <a href="#cells">[Cells]</a>.</p>
 <h3 id="cell-map">(2) Cell map</h3>
 <p class="en-indent">The Delaunay triangulation excluding the triangles thresholded based on the <a href="#threshold">[Threshold]</a> settings. The surface color represents the feature value specified in <a href="#color">[Color]</a> &gt; <a href="#surface">[Surface]</a> &gt; [Feature] at the color map specified in <a href="#color">[Color]</a> &gt; <a href="#surface">[Surface]</a> &gt; [Color map] within the range specified in <a href="#color">[Color]</a> &gt; <a href="#surface">[Surface]</a> &gt; [Min]/[Max]. The cell points are displayed as the enlarged view below. Color of the cell points is specified as the same way in <a href="#color">[Color]</a> &gt; <a href="#cells">[Cells]</a>, independent from the <a href="#color">[Color]</a> &gt; <a href="#surface">[Surface]</a>.</p>
-<img class="figure" style="width: 300px; height: 300px;" src="img/cell_points.png">
+<img class="figure" style="width: 300px; height: 300px;" src="CellMapViewer/img/cell_points.png">
 <h3 id="annotation-label">(3) Annotation</h3>
 <p class="en-indent">If the input data contain "Annotation" column, the label of each annotation is displayed at the average position of the cells with the annotation. By clicking the label, you can select the cells with the annotation of the label. When the Shift, Ctrl (for Windows) or Command (for mac) key is pressed at the same time, the cells of the annotation are added to the already selected cells.</p>
 <h2 id="algorithm">Algorithm for visualization</h2>
@@ -104,7 +104,7 @@ A sample data is available [here](https://www.dropbox.com/s/aqjrpeos4auvycy/Cell
 </ol>
 <h2 id="configuration">Configuring visualization</h2>
 <p class="no-indent">The next figure shows the expanded menu.</p>
-<img class="figure" style="width: 239px; height: 812px;" src="img/opened_menu.png">
+<img class="figure" style="width: 239px; height: 812px;" src="CellMapViewer/img/opened_menu.png">
 <p class="en-indent">The settings in the menu are described below.</p>
 <h3 id="threshold">[Threshold]</h3>
 <p class="en-indent">The threshold for the exclusion of the triangles in the Delaunay triangulation. See <a href="#algorithm">"Algorithm for visualization"</a> for details.</p>
@@ -160,7 +160,7 @@ A sample data is available [here](https://www.dropbox.com/s/aqjrpeos4auvycy/Cell
 <p class="en-indent">Drag with the right button down to pan.</p>
 <h2 id="selecting-cells">Selecting cells</h2>
 <p class="no-indent">You can select cells by click or drag. Selected cells are highlighted in red as shown in the next figure.</p>
-<img class="figure" style="width: 180px; height: 180px;" src="img/selected_cells.png">
+<img class="figure" style="width: 180px; height: 180px;" src="CellMapViewer/img/selected_cells.png">
 <h3 id="selection-by-click">Selection by click</h3>
 <p class="en-indent">When a cell point is clicked, the cell is selected and the others are deselected. When a cell is clicked with the Shift, Ctrl (for Windows) or Command (for mac) key pressed, the cell is added to the already selected cells.</p>
 <h3 id="selection-by-drag">Selection by drag</h3>
@@ -176,6 +176,6 @@ A sample data is available [here](https://www.dropbox.com/s/aqjrpeos4auvycy/Cell
 <h3 id="path-regarding-z">Path search <em>regarding</em> <em>z</em> coordinates</h3>
 <p class="en-indent">Executed by clicking [Find 3D path]. The algorithm tries to find the shortest path where the <em>z</em> coordinate monotonically increases or decreases.</p>
 <p class="no-indent">When the path is found, a line chart with the selected cells on the horizontal axis and the selected feature on the vertical axis is displayed at the bottom of <a href="#selected-cell-information">the selected-cell information</a>, as shown in the figure below. The displayed feature can be changed dynamically by changing <a href="#z-axis">[Z-axis]</a> &gt; [Feature] while the graph is displayed.</p>
-<img class="figure" style="width: 800px; height: 193px;" src="img/plot.png">
+<img class="figure" style="width: 800px; height: 193px;" src="CellMapViewer/img/plot.png">
 <h2 id="screenshot">Taking a screenshot</h2>
 <p class="no-indent">You can save a screenshot of the <a href="#map-displayed-area">cell map-displayed area</a> excluding the menu area in PNG format by clicking [Save image].</p>
