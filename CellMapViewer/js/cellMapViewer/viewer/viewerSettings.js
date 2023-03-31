@@ -97,7 +97,7 @@ class ViewerSettings {
     this.threshAreaPercent = 1.0;
     this.threshEdgePercent = 1.0;
     this.zFeature = defaultZFeatureLabel;
-    this.zScale = 0.05;
+    this.zScale = 1.00;
     this.gridZ = 0;
     this.colorFeature = defaultColorFeatureLabel;
     this.colorMap = gistEarthLabel;
