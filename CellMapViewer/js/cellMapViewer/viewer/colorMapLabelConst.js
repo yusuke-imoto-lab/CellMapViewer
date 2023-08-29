@@ -33,6 +33,9 @@ const cubeHelixLabel = "Cubehelix";
 /** @type {string} カラー マップ gist_rainbow のラベルです。*/
 const gistNcarLabel = "Gist NCAR";
 
+/** @type {string} カラー マップ Spectral のラベルです。*/
+const spectralLabel = "Spectral";
+
 /** @type {Array<string>} カラー マップのラベルのリストです。 */
 const colorMapLabelList = [
   gistEarthLabel,
@@ -45,4 +48,5 @@ const colorMapLabelList = [
   plasmaLabel,
   viridisLabel,
   gistNcarLabel,
+  spectralLabel,
 ];

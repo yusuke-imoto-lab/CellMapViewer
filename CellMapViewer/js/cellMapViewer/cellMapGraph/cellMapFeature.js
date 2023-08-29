@@ -11,18 +11,23 @@ class CellMapFeature {
   // 特徴量の名前です。
   #name;
 
-  // 特徴量の値の配列です。
-  #valueArray;
+  // 特徴量の値 (数値または文字列) の配列です。
+  #array;
+
+  // 特徴量が数値であるかを表すフラグです。
+  #isNumber;
 
   /**
    * コンストラクターです。
    * @param {string} name 特徴量の名前です。
-   * @param {Float64Array} valueArray 特徴量の値の配列です。
+   * @param {Float64Array | Array<string>} array 特徴量の値の配列です。
+   * @param {Boolean} isNumber 配列が数値か文字列かを表すフラグです。
    * @memberof CellMapFeature
    */
-  constructor(name, valueArray) {
+  constructor(name, array, isNumber) {
     this.#name = name;
-    this.#valueArray = valueArray;
+    this.#array = array;
+    this.#isNumber = isNumber;
   }
 
   /**
@@ -36,13 +41,23 @@ class CellMapFeature {
   }
 
   /**
-   * 特徴量の値の配列を取得します。
+   * 特徴量の値 (数値) の配列を取得します。
    *
    * @readonly
    * @memberof CellMapFeature
    */
-  get valueArray() {
-    return this.#valueArray;
+  get array() {
+    return this.#array;
+  }
+
+  /**
+   * 特徴量の値が数値か否かを表すフラグを取得します。
+   *
+   * @readonly
+   * @memberof CellMapFeature
+   */
+  get isNumber() {
+    return this.#isNumber;
   }
 }
 

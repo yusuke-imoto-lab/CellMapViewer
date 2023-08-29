@@ -21,8 +21,20 @@ const defaultZFeatureLabel = potentialLabel;
 /** @type {string} 着色に用いる特徴量の種類の既定値です。 */
 const defaultColorFeatureLabel = defaultZFeatureLabel;
 
-/** @type {string} 細胞種を表すラベルです。 */
-const annotationLabel = "Annotation";
+/** @type {string} 細胞種を表すラベルの既定値です。 */
+const defaultAnnotationLabel = "Annotation";
+
+/** @type {string} 細胞種を表すラベルの正規表現です。 */
+const annotationLabelPattern = /^annotation$|^(annotation|a|ann|annote)_[a-z|0-9]+$/;
+
+/** @type {string} 細胞種を表すラベルの既定値です。 */
+const defaultVectorLabel = "Velocity";
+
+/** @type {string} x ベクトルを表すラベルです。 */
+const xVectorLabelPattern = /_x$/;
+
+/** @type {string} y ベクトルを表すラベルです。 */
+const yVectorLabelPattern = /_y$/;
 
 if (typeof module !== "undefined") {
   exports.idLabel = idLabel;
@@ -31,5 +43,9 @@ if (typeof module !== "undefined") {
   exports.potentialLabel = potentialLabel;
   exports.defaultZFeatureLabel = defaultZFeatureLabel;
   exports.defaultColorFeatureLabel = defaultColorFeatureLabel;
-  exports.annotationLabel = annotationLabel;
+  exports.defaultAnnotationLabel = defaultAnnotationLabel;
+  exports.annotationLabelPattern = annotationLabelPattern;
+  exports.defaultVectorLabel = defaultVectorLabel;
+  exports.xVectorLabelPattern = xVectorLabelPattern;
+  exports.yVectorLabelPattern = yVectorLabelPattern;
 }

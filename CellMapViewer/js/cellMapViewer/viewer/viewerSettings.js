@@ -8,9 +8,6 @@
  */
 class ViewerSettings {
 
-  // 三角形分割の三角形を除去する閾値の種類を表します。
-  #threshType;
-
   // 三角形分割の三角形を除去する閾値を面積にした場合に除外される
   // 三角形の上位の割合 (%) です。
   #threshAreaPercent;
@@ -19,12 +16,30 @@ class ViewerSettings {
   // 三角形の上位の割合 (%) です。
   #threshEdgePercent;
 
+  // 表示する細胞の割合 (個数) です。
+  #cellDisplayPercent;
+
   // z 座標のスケールです。
   #zScale;
 
-  // 着色カラー マップの種類です。
+  // 着色カラー マップ (Surface 用) です。
   #colorMap;
+  // 着色カラーマップ (Surface 用) の最小値と最大値です。
+  #colorMin;
+  #colorMax;
+  // 着色カラーマップ (Surface 用) の最小値と最大値のデフォルト値です。
+  #colorMinDefault = -1;
+  #colorMaxDefault = 1;
+
+
+  // 着色カラー マップ (Cell 用) です
   #pointsColorMap;
+  // 着色カラーマップ (Cell 用) の最小値と最大値です。
+  #pointsColorMin;
+  #pointsColorMax;
+  // 着色カラーマップ (Cell 用) の最小値と最大値のデフォルト値です。
+  #pointsColorMinDefault = -1;
+  #pointsColorMaxDefault = 1;
 
   // アノテーションのフォント サイズです。
   #annotationFontSize;
@@ -38,29 +53,42 @@ class ViewerSettings {
   // 経路を表す線の太さです。
   #pathWidth;
 
+  // 等高線の太さです。
+  #contourWidth;
+
+  // 経路計算に利用するパラメーターです。
+  #register;
+
   // ドラッグ (左ボタン) の挙動です。
   #dragAction;
 
+  // 回転軸の設定です。
+  #rotationAxis;
+
   /**
    * コンストラクターです。初期値が以下の通り設定されます。  
-   * ・三角形分割の三角形を除去する閾値の種類: 面積  
    * ・閾値を面積にした場合に除外される三角形の上位の割合 (%): 1.0  
    * ・閾値を最長辺の長さにした場合に除外される三角形の上位の割合 (%): 1.0  
-   * ・z 座標に用いる特徴量: ポテンシャル  
+   * ・z 座標に用いる特徴量: ポテンシャル
+   * ・アノテーションに用いる特徴量："Annotation"
+   * ・ストリームライン表示に用いる特徴量："Velocity"
    * ・z 座標のスケール: 0.05  
    * ・グリッドの z 座標: 0  
-   * ・カラー マップと対応させる特徴量: ポテンシャル  
-   * ・カラー マップの種類: Gist earth  
-   * ・カラー マップの最小値: -1  
-   * ・カラー マップの最大値: 1  
-   * ・カラー マップの最小値の既定値: -1  
-   * ・カラー マップの最大値の既定値: 1  
-   * ・点群のカラー マップと対応させる特徴量: ポテンシャル  
-   * ・点群のカラー マップの種類: Jet  
-   * ・点群のカラー マップの最小値: -1  
-   * ・点群のカラー マップの最大値: 1  
-   * ・点群のカラー マップの最小値の既定値: -1  
-   * ・点群のカラー マップの最大値の既定値: 1  
+   * ・カラー マップ (Surface 用) と対応させる特徴量: ポテンシャル  
+   * ・カラー マップ (Surface 用) の種類: Gist earth  
+   * ・カラー マップ (Surface 用) の最小値: -1  
+   * ・カラー マップ (Surface 用) の最大値: 1  
+   * ・カラー マップ (Surface 用) の最小値の既定値: -1  
+   * ・カラー マップ (Surface 用) の最大値の既定値: 1  
+   * ・カラー マップ (Cell 用) と対応させる特徴量: ポテンシャル  
+   * ・カラー マップ (Cell 用) の種類: Jet  
+   * ・カラー マップ (Cell 用) の最小値: -1  
+   * ・カラー マップ (Cell 用) の最大値: 1  
+   * ・カラー マップ (Cell 用) の最小値の既定値: -1  
+   * ・カラー マップ (Cell 用) の最大値の既定値: 1 
+   * ・メッシュの色: rgb(255, 255, 255)  
+   * ・ストリームラインの色：rgb(255, 0, 0) 
+   * ・等高線の色: rgb(255, 255, 255)  
    * ・背景色: rgb(0, 0, 0)  
    * ・アノテーションのフォント サイズ: 16
    * ・細胞を表す点の大きさ: 0.1  
@@ -68,104 +96,103 @@ class ViewerSettings {
    * ・経路を表す線の太さ: 0.05  
    * ・細胞のアノテーションの表示: する  
    * ・地図の表面の表示: する  
-   * ・細胞を表す点群の表示: する  
+   * ・地図の表面のメッシュの表示: しない  
    * ・選択された細胞を表す点の強調表示: する  
+   * ・ストリームラインの表示：しない
+   * ・表示する等高線の本数：0
    * ・グリッドの表示: する
+   * ・経路計算のためのパラメータ: 1
    * ・ドラッグの挙動: カメラ操作
+   * ・回転軸: 現在の座標
    * 
    * @memberof ViewerSettings
    */
   constructor() {
-
-    this.colorMinDefault = -1;
-    this.colorMaxDefault = 1;
-    this.pointsColorMinDefault = -1;
-    this.pointsColorMaxDefault = 1;
     this.reset();
   }
 
   /**
    * 設定値をコンストラクターによる生成時の値にリセットします。
-   * ただし、カラー マップの最小値/最大値プロパティは
-   * カラー マップの最小値/最大値の既定値プロパティに合わせてリセットされます。
    *
    * @memberof ViewerSettings
    */
   reset = () => {
-
-    this.threshType = areaLabel;
     this.threshAreaPercent = 1.0;
     this.threshEdgePercent = 1.0;
+    this.cellDisplayPercent = 100;
     this.zFeature = defaultZFeatureLabel;
+    this.annotation = defaultAnnotationLabel;
+    this.vector = defaultVectorLabel;
     this.zScale = 1.00;
     this.gridZ = 0;
     this.colorFeature = defaultColorFeatureLabel;
     this.colorMap = gistEarthLabel;
+    this.colorMin = this.colorMinDefault;
+    this.colorMax = this.colorMaxDefault;
     this.pointsColorFeature = defaultColorFeatureLabel;
     this.pointsColorMap = jetLabel;
-    this.resetColorMinMax();
-    this.resetPointsColorMinMax();
+    this.pointsColorMin = this.pointsColorMinDefault;
+    this.pointsColorMax = this.pointsColorMaxDefault;
+    this.meshLineColor = [255, 255, 255];
+    this.streamlineColor = [255, 0, 0];
+    this.contourColor = [255, 255, 255];
     this.bgColor = [0, 0, 0];
     this.annotationFontSize = 16;
     this.cellSize = 0.1;
     this.selectionSize = 0.15;
     this.pathWidth = 0.05;
+    this.contourWidth = 0.03;
     this.showAnnotations = true;
     this.showSurface = true;
-    this.showCellPoints = true;
+    this.showSurfaceMesh = false;
     this.highlightSelection = true;
+    this.showStreamline = false;
+    this.contour = 0;
     this.showGrid = true;
+    this.register = 1.00;
     this.dragAction = cameraRotationLabel;
+    this.rotationAxis = currentCoordinateLabel;
   }
 
   /**
    * デシリアライズされた連想配列を渡して設定値を更新します。
-   * ただし、カラー マップの最小値/最大値プロパティは
-   * カラー マップの最小値/最大値の既定値プロパティに合わせてリセットされます。
    */
   resetBy = (json) => {
-    if (json.threshType) this.threshType = json.threshType;
     if (json.threshAreaPercent) this.threshAreaPercent = json.threshAreaPercent;
     if (json.threshEdgePercent) this.threshEdgePercent = json.threshEdgePercent;
+    if (json.cellDisplayPercent) this.cellDisplayPercent = json.cellDisplayPercent;
     if (json.zFeature) this.zFeature = json.zFeature;
+    if (json.annotation) this.annotation = json.annotation;
+    if (json.vector) this.vector = json.vector;
     if (json.zScale) this.zScale = json.zScale;
     if (json.gridZ) this.gridZ = json.gridZ;
     if (json.colorFeature) this.colorFeature = json.colorFeature;
     if (json.colorMap) this.colorMap = json.colorMap;
-    this.resetColorMinMax();
-    this.resetPointsColorMinMax();
+    if (json.colorMin) this.colorMin = json.colorMin;
+    if (json.colorMax) this.colorMax = json.colorMax;
+    if (json.pointsColorFeature) this.pointsColorFeature = json.pointsColorFeature;
+    if (json.pointsColorMap) this.pointsColorMap = json.pointsColorMap;
+    if (json.pointsColorMin) this.pointsColorMin = json.pointsColorMin;
+    if (json.pointsColorMax) this.pointsColorMax = json.pointsColorMax;
+    if (json.meshLineColor) this.meshLineColor = json.meshLineColor;
+    if (json.streamlineColor) this.streamlineColor = json.streamlineColor;
+    if (json.contourColor) this.contourColor = json.contourColor;
     if (json.bgColor) this.bgColor = json.bgColor;
     if (json.annotationFontSize) this.annotationFontSize = json.annotationFontSize;
     if (json.cellSize) this.cellSize = json.cellSize;
     if (json.selectionSize) this.selectionSize = json.selectionSize;
     if (json.pathWidth) this.pathWidth = json.pathWidth;
+    if (json.contourWidth) this.contourWidth = json.contourWidth;
     if (json.showAnnotations) this.showAnnotations = json.showAnnotations;
     if (json.showSurface) this.showSurface = json.showSurface;
-    if (json.showCellPoints) this.showCellPoints = json.showCellPoints;
+    if (json.showSurfaceMesh) this.showSurfaceMesh = json.showSurfaceMesh;
     if (json.highlightSelection) this.highlightSelection = json.highlightSelection;
+    if (json.contour) this.contour = json.contour;
+    if (json.showStreamline) this.showStreamline = json.showStreamline;
     if (json.showGrid) this.showGrid = json.showGrid;
+    if (json.register) this.register = json.register;
     if (json.dragAction) this.dragAction = json.dragAction;
-  }
-
-  /**
-   * 三角形分割の三角形を除去する閾値の種類を取得します。
-   *
-   * @memberof ViewerSettings
-   */
-  get threshType() {
-    return this.#threshType;
-  }
-
-  /**
-   * 三角形分割の三角形を除去する閾値の種類を設定します。
-   *
-   * @memberof ViewerSettings
-   */
-  set threshType(value) {
-    if (!threshTypeLabelList.includes(value)) {
-      throw invalidThreshTypeError(value);
-    }
-    this.#threshType = value;
+    if (json.rotationAxis) this.rotationAxis = json.rotationAxis;
   }
 
   /**
@@ -215,22 +242,25 @@ class ViewerSettings {
   }
 
   /**
-   * threshType プロパティの値に応じて
-   * 三角形分割の三角形を除去する閾値 (%) を取得します。
+   * 細胞の表示率 (個数 %) を設定します。
+   *
+   * @memberof ViewerSettings
+   */
+  set cellDisplayPercent(value) {
+    if (value < 0 || 100 < value) {
+      throw invalidCellDisplayPercentError;
+    }
+    this.#cellDisplayPercent = value;
+  }
+
+  /**
+   * 細胞の表示率 (個数 %) を取得します。
    *
    * @readonly
    * @memberof ViewerSettings
    */
-  get threshPercent() {
-
-    switch (this.threshType) {
-      case areaLabel:
-        return this.threshAreaPercent;
-      case longestEdgeLabel:
-        return this.threshEdgePercent;
-      default:
-        throw threshPercentGetterError(this.threshType);
-    }
+  get cellDisplayPercent() {
+      return this.#cellDisplayPercent;
   }
 
   /**
@@ -255,7 +285,7 @@ class ViewerSettings {
   }
 
   /**
-   * 着色カラー マップの種類を取得します。
+   * 着色カラー マップ (Surface 用) の種類を取得します。
    *
    * @memberof ViewerSettings
    */
@@ -264,7 +294,7 @@ class ViewerSettings {
   }
 
   /**
-   * 着色カラー マップの種類を設定します。
+   * 着色カラー マップ (Surface 用) の種類を設定します。
    *
    * @memberof ViewerSettings
    */
@@ -276,7 +306,80 @@ class ViewerSettings {
   }
 
   /**
-   * 着色カラー マップの種類を取得します。
+   * 着色カラー マップ (Surface 用) の最小値を取得します。
+   *
+   * @memberof ViewerSettings
+   */
+  get colorMin() {
+    return this.#colorMin;
+  }
+
+  /**
+   * 着色カラー マップ (Surface 用) の最小値を設定します。
+   *
+   * @memberof ViewerSettings
+   */
+  set colorMin(value) {
+    this.#colorMin = value;
+  }
+
+  /**
+   * 着色カラー マップ (Surface 用) の最大値を取得します。
+   *
+   * @memberof ViewerSettings
+   */
+  get colorMax() {
+    return this.#colorMax;
+  }
+
+  /**
+   * 着色カラー マップ (Surface 用) の最大値を設定します。
+   *
+   * @memberof ViewerSettings
+   */
+  set colorMax(value) {
+    this.#colorMax = value;
+  }
+
+  /**
+   * 着色カラー マップ (Surface 用) の最小値のデフォルト値を取得します。
+   *
+   * @memberof ViewerSettings
+   */
+  get colorMinDefault() {
+    return this.#colorMinDefault;
+  }
+
+  /**
+   * 着色カラー マップ (Surface 用) の最小値のデフォルト値を設定します。
+   *
+   * @memberof ViewerSettings
+   */
+  set colorMinDefault(value) {
+    this.#colorMinDefault = value;
+  }
+
+  /**
+   * 着色カラー マップ (Surface 用) の最大値のデフォルト値を取得します。
+   *
+   * @memberof ViewerSettings
+   */
+  get colorMaxDefault() {
+    return this.#colorMaxDefault;
+  }
+
+  /**
+   * 着色カラー マップ (Surface 用) の最大値のデフォルト値を設定します。
+   *
+   * @memberof ViewerSettings
+   */
+  set colorMaxDefault(value) {
+    this.#colorMaxDefault = value;
+  }
+
+
+  /**
+   * 着色カラー マップ (Cell 用) の種類を取得します。
    *
    * @memberof ViewerSettings
    */
@@ -285,7 +388,7 @@ class ViewerSettings {
   }
 
   /**
-   * 着色カラー マップの種類を設定します。
+   * 着色カラー マップ (Cell 用) の種類を設定します。
    *
    * @memberof ViewerSettings
    */
@@ -294,6 +397,78 @@ class ViewerSettings {
       throw invalidColorMapNameError(value);
     }
     this.#pointsColorMap = value;
+  }
+
+  /**
+   * 着色カラー マップ (Cell 用) の最小値を取得します。
+   *
+   * @memberof ViewerSettings
+   */
+  get pointsColorMin() {
+    return this.#pointsColorMin;
+  }
+
+  /**
+   * 着色カラー マップ (Cell 用) の最小値を設定します。
+   *
+   * @memberof ViewerSettings
+   */
+  set pointsColorMin(value) {
+    this.#pointsColorMin = value;
+  }
+
+  /**
+   * 着色カラー マップ (Cell 用) の最大値を取得します。
+   *
+   * @memberof ViewerSettings
+   */
+  get pointsColorMax() {
+    return this.#pointsColorMax;
+  }
+
+  /**
+   * 着色カラー マップ (Cell 用) の最大値を設定します。
+   *
+   * @memberof ViewerSettings
+   */
+  set pointsColorMax(value) {
+    this.#pointsColorMax = value;
+  }
+
+  /**
+   * 着色カラー マップ (Cell 用) の最小値のデフォルト値を取得します。
+   *
+   * @memberof ViewerSettings
+   */
+  get pointsColorMinDefault() {
+    return this.#pointsColorMinDefault;
+  }
+
+  /**
+   * 着色カラー マップ (Cell 用) の最小値のデフォルト値を設定します。
+   *
+   * @memberof ViewerSettings
+   */
+  set pointsColorMinDefault(value) {
+    this.#pointsColorMinDefault = value;
+  }
+
+  /**
+   * 着色カラー マップ (Cell 用) の最大値のデフォルト値を取得します。
+   *
+   * @memberof ViewerSettings
+   */
+  get pointsColorMaxDefault() {
+    return this.#pointsColorMaxDefault;
+  }
+
+  /**
+   * 着色カラー マップ (Cell 用) の最大値のデフォルト値を設定します。
+   *
+   * @memberof ViewerSettings
+   */
+  set pointsColorMaxDefault(value) {
+    this.#pointsColorMaxDefault = value;
   }
 
   /**
@@ -379,6 +554,50 @@ class ViewerSettings {
     }
     this.#pathWidth = value;
   }
+
+  /**
+   * 等高線の太さを取得します。
+   *
+   * @memberof ViewerSettings
+   */
+  get contourWidth() {
+    return this.#contourWidth;
+  }
+  
+  /**
+   * 等高線の太さを指定します。
+   *
+   * @memberof ViewerSettings
+   */
+  set contourWidth(value) {
+    if (value < 0) {
+      throw negativeSizeError;
+    }
+    this.#contourWidth = value;
+  }
+
+  /**
+   * 経路計算のためのパラメーターを取得します。
+   *
+   * @memberof ViewerSettings
+   */
+  get register() {
+    return this.#register;
+  }
+  
+  /**
+   * 経路計算のためのパラメーターを指定します。
+   *
+   * @memberof ViewerSettings
+   */
+  set register(value) {
+    if (value < 0 || 1 < value ) {
+      throw invalidRegisterError;
+    }
+    this.#register = value;
+  }
+
+
   /**
    * ドラッグの挙動を取得します。
    *
@@ -401,18 +620,44 @@ class ViewerSettings {
   }
 
   /**
-   * カラー マップの最小値/最大値プロパティを
+   * 回転軸の設定を取得します。
+   *
+   * @memberof ViewerSettings
+   */
+  get rotationAxis() {
+    return this.#rotationAxis;
+  }
+
+  /**
+   * 回転軸を設定します。
+   *
+   * @memberof ViewerSettings
+   */
+  set rotationAxis(value) {
+    if (!rotationAxisList.includes(value)) {
+      throw invalidRotationAxisError(value);
+    }
+    this.#rotationAxis = value;
+  }
+
+  /**
+   * 着色カラー マップ (Surface 用) の最小値/最大値プロパティを
    * 既定値プロパティに合わせてリセットします。
    *
    * @memberof ViewerSettings
    */
   resetColorMinMax = () => {
-
     this.colorMin = this.colorMinDefault;
     this.colorMax = this.colorMaxDefault;
   }
-  resetPointsColorMinMax = () => {
 
+  /**
+   * 着色カラー マップ (Cell 用) の最小値/最大値プロパティを
+   * 既定値プロパティに合わせてリセットします。
+   *
+   * @memberof ViewerSettings
+   */
+  resetPointsColorMinMax = () => {
     this.pointsColorMin = this.pointsColorMinDefault;
     this.pointsColorMax = this.pointsColorMaxDefault;
   }
@@ -422,27 +667,39 @@ class ViewerSettings {
    */
   toJSON = () => {
     return {
-      threshType: this.threshType,
       threshAreaPercent: this.threshAreaPercent,
       threshEdgePercent: this.threshEdgePercent,
       zFeature: this.zFeature,
+      annotation: this.annotation,
+      vector: this.vector,
       zScale: this.zScale,
       gridZ: this.gridZ,
       colorFeature: this.colorFeature,
-      pointsColorFeature: this.pointsColorFeature,
       colorMap: this.colorMap,
+      colorMin: this.colorMin,
+      colorMax: this.colorMax,
+      pointsColorFeature: this.pointsColorFeature,
       pointsColorMap: this.pointsColorMap,
+      pointsColorMin: this.pointsColorMin,
+      pointsColorMax: this.pointsColorMax,
+      meshLineColor: this.meshLineColor,
+      streamlineColor: this.streamlineColor,
+      contourColor: this.contourColor,
       bgColor: this.bgColor,
       annotationFontSize: this.annotationFontSize,
       cellSize: this.cellSize,
       selectionSize: this.selectionSize,
       pathWidth: this.pathWidth,
+      contourWidth: this.contourWidth,
       showAnnotations: this.showAnnotations,
       showSurface: this.showSurface,
-      showCellPoints: this.showCellPoints,
+      showSurfaceMesh: this.showSurfaceMesh,
       highlightSelection: this.highlightSelection,
+      contour: this.contour,
+      showStreamline: this.showStreamline,
       showGrid: this.showGrid,
-      dragAction: this.dragAction
+      dragAction: this.dragAction,
+      rotationAxis: this.rotationAxis 
     }
   }
 }

@@ -34,6 +34,11 @@ class CellMapStats {
    */
   constructor(graph, indices) {
 
+    // アノテーションのラベル リスト
+    const annotationList  = graph.annotationLabelList;
+    // アノテーション以外のラベルのリストを取得します。
+    const numericFeatureNameList = graph.zFeatureLabelList.filter(feature => ! annotationList.includes(feature));
+
     // 合計値を格納する辞書です。
     const sumDict = {};
 
@@ -57,7 +62,10 @@ class CellMapStats {
     }
 
     // z 座標となりうる特徴量それぞれの合計値と最小値、最大値を計算します。
-    for (const zFeatureName of graph.zFeatureLabelList) {
+    for (const zFeatureName of numericFeatureNameList) {
+
+      // アノテーション列は計算の対象外にします。
+      if (annotationList.includes(zFeatureName)) continue;
 
       sumDict[zFeatureName] = 0;
       this.#minDict[zFeatureName] = Infinity;
@@ -74,7 +82,7 @@ class CellMapStats {
     }
 
     // x、y 座標、z 座標となりうる特徴量の名前のリストを用意します。
-    const featureNameList = graph.zFeatureLabelList;
+    const featureNameList = numericFeatureNameList.slice();
     featureNameList.push(xLabel);
     featureNameList.push(yLabel);
 
@@ -102,7 +110,10 @@ class CellMapStats {
     }
 
     // z 座標となりうる特徴量の偏差の 2 乗和を求めます。
-    for (const zFeatureName of graph.zFeatureLabelList) {
+    for (const zFeatureName of numericFeatureNameList) {
+
+      // アノテーション列は計算の対象外にします。
+      if (annotationList.includes(zFeatureName)) continue;
 
       totalSquaredDeviationSumDict[zFeatureName] = 0;
       const zFeatureArray = graph.getZFeatureArrayByName(zFeatureName);

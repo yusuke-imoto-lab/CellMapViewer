@@ -31,6 +31,7 @@
     <div id="cell_info_title">Selected cells <a href="javascript:viewerOnSaveTableClick();"><span id="n_selected"></span></a></div>
     <div id="cell_info_table_holder"></div>
 
+    <script type="text/javascript" src="js/initialData.js"></script>
     <script type="text/javascript" src="js/libs/three/three.min.js"></script>
     <script type="text/javascript" src="js/libs/three/TrackballControls.js"></script>
     <script type="text/javascript" src="js/libs/three/SelectionBox.js"></script>
@@ -40,6 +41,7 @@
     <script type="text/javascript" src="js/libs/delaunator/delaunator.min.js"></script>
     <script type="text/javascript" src="js/libs/dat-gui/dat.gui.min.js"></script>
     <script type="text/javascript" src="js/libs/PapaParse/papaparse.min.js"></script>
+    <script type="text/javascript" src="js/libs/seedrandom/seedrandom.min.js"></script>
     <script type="text/javascript" src="js/libs/html2canvas/html2canvas.min.js"></script>
     <script type="text/javascript" src="js/libs/js-colormaps/js-colormaps.js"></script>
     <script type="text/javascript" src="js/libs/chart/chart.umd.js"></script>
@@ -53,12 +55,14 @@
     <script type="text/javascript" src="js/cellMapViewer/cellMapGraph/graphErrorConst.js"></script>
     <script type="text/javascript" src="js/cellMapViewer/cellMapGraph/pathFinder.js"></script>
     <script type="text/javascript" src="js/cellMapViewer/cellMapGraph/priorityQueue.js"></script>
+    <script type="text/javascript" src="js/cellMapViewer/cellMapGraph/streamlineMaker.js"></script>
     <script type="text/javascript" src="js/cellMapViewer/cellMapGraph/threshTypeLabelConst.js"></script>
     <script type="text/javascript" src="js/cellMapViewer/viewer/colorMapLabelConst.js"></script>
     <script type="text/javascript" src="js/cellMapViewer/viewer/viewerSettings.js"></script>
     <script type="text/javascript" src="js/cellMapViewer/viewer/viewerErrorConst.js"></script>
     <script type="text/javascript" src="js/cellMapViewer/viewer/colorMap.js"></script>
     <script type="text/javascript" src="js/cellMapViewer/viewer/dragActionLabelConst.js"></script>
+    <script type="text/javascript" src="js/cellMapViewer/viewer/rotationAxisLabelConst.js"></script>
     <script type="text/javascript" src="js/cellMapViewer/viewer/viewerMessageConst.js"></script>
     <script type="text/javascript" src="js/cellMapViewer/viewer/textureData.js"></script>
     <script type="text/javascript" src="js/cellMapViewer/viewer/viewer.js"></script>
@@ -72,6 +76,35 @@
       const fileNameHolder = document.getElementById("file_name");
       const separator = document.getElementById("separator");
       const cellInfoArea = document.getElementById("cell_info_table_holder");
+
+      // initialData.js ファイルを読み取り、ファイルにデータが存在すればそれを Viewer に表示します。 
+      (function () {
+
+        // ファイルに何も記述されていない、もしくはグローバル変数 initialData が未定義であれば、終了します。
+        if (typeof initialData === "undefined") return;
+      
+        try {
+          // initialData.js ファイルの内容を取得し、データを読み取ります。
+          const readData = initialData;        
+          if (! readData) return;
+          const fileNameErrorMessage = "property of fileName does not exit in initialData.js"
+          if (! readData.hasOwnProperty("fileName")) throw new Error(fileNameErrorMessage);
+          const dataErrorMessage = "property of data does not exit in initialData.js"
+          if (! readData.hasOwnProperty("data")) throw new Error(dataErrorMessage);
+          // 読み取った内容から File オブジェクトを作成し、Viewer に読み込ませます。
+          const displayName = `initialData.js (original : ${readData.fileName})`
+          const file = new File([readData.data], displayName, { type: 'text/plain' });
+          const isAuto = true;
+          viewer.loadFileData(file, isAuto);
+        }
+        catch (e) {
+          const errorMessage = `initialData.js is invalid format.\n${e.message}`;
+          window.alert(errorMessage);
+        }
+        finally {
+          initialData = null;
+        }        
+      }());
 
       viewer.onLoaded = viewerOnLoaded(viewer, fileNameHolder, cellInfoArea);
 

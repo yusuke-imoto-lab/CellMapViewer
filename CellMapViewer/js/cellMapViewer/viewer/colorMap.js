@@ -98,6 +98,9 @@ class ColorMap {
         case gistNcarLabel:
           this.#nameInMatplotlib = "gist_ncar";
           return;
+        case spectralLabel:
+          this.#nameInMatplotlib = "Spectral";
+          return;
         default:
           // ここに到達することはないはずですが、
           // 到達した場合にわかりやすいよう例外を投げます。
@@ -134,6 +137,9 @@ class ColorMap {
           return;
         case gistNcarLabel:
           this.#reverseInMatplotlib = false;
+          return;
+        case spectralLabel:
+          this.#reverseInMatplotlib = true;
           return;
         default:
           // ここに到達することはないはずですが、

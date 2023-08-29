@@ -11,7 +11,7 @@
   <body>
 
     <h1>CellMapViewer マニュアル</h1>
-    <p>最終更新: 2023 年 1 月 20 日</p>
+    <p>最終更新: 2023 年 7 月 31 日</p>
 
     <h2>目次</h2>
     <ul>
@@ -28,38 +28,48 @@
         <li><a href="#画像の保存">画像の保存</a></li>
     </ul>
 
+
     <h2 id="概要">概要</h2>
     <p class="ja-indent">CellMapViewer は、細胞地図の三次元での可視化のための Web プログラムです。CSV 形式の入力テキスト ファイルから、座標や特徴量をもつ細胞群のデータを読み込ませると、Delaunay 三角形分割が行われ、その結果が可視化されます。</p>
     <p class="ja-indent">可視化後、GUI から次の操作が可能です。</p>
     <ul>
       <li>マウス操作による視点の変更</li>
       <li>マウス操作による細胞の選択</li>
+      <li>細胞地図上での等高線、メッシュ、ストリームラインの表示</li>
       <li>2 点間を結ぶ最短経路の探索と経路上の特徴量のグラフ表示</li>
       <li>表示中の細胞地図の PNG 形式での保存</li>
       <li>選択された細胞群データの CSV 形式での保存</li>
       <li>設定の保存と読み込み</li>
+      <li>細胞群データの自動読み込み</li>
     </ul>
     <p class="ja-indent">また、GUI メニューから次に示す各種の設定が可能です。</p>
     <ul>
-      <li>三角形分割からの一部の三角形の除去</li>
+      <li>三角形分割から除去する三角形の割合</li>
       <li><em>z</em> 軸に用いる特徴量</li>
-      <li>細胞地図の面、細胞を表す点や背景の色</li>
-      <li>点のサイズや経路の太さ</li>
-      <li>アノテーション、細胞地図の面、細胞を表す点やグリッドの表示/非表示、選択中の細胞の強調の有無</li>
+      <li>アノテーションに用いる特徴量</li>
+      <li>ストリームライン表示に用いる特徴量</li>
+      <li>細胞地図の面、細胞を表す点、等高線、メッシュおよび背景の色</li>
+      <li>細胞を表す点のサイズ、経路、等高線およびメッシュの太さ</li>
+      <li>アノテーション、細胞地図の面、細胞を表す点の表示割合、等高線、メッシュ、ストリームラインおよびグリッドの表示/非表示、選択中の細胞の強調の有無</li>
+      <li>マウス操作および視点の切り替え</li>
     </ul>
     <p class="ja-indent">加えて、選択中の細胞に関して、各細胞の情報や、細胞群の座標や特徴量の平均などの統計量が自動的に表示されます。</p>
+
+    
     <h2 id="画面の説明">画面の説明</h2>
-    <img class="figure" style="width: 816px; height: 607px;" src="img/whole_gui.png">
+    <img class="figure" style="width: 618px; height: 607px;" src="img/whole_gui.png">
     <h3 id="マニュアル-ページへのリンク">(1) マニュアル ページとサンプル データへのリンク</h3>
     <p class="ja-indent">マニュアルは日本語版と英語版があります。</p>
     <h3 id="ファイル選択エリア">(2) ファイル選択エリア</h3>
     <p class="ja-indent">クリックすると入力ファイルを選択するダイアログが開きます。入力ファイルをドラッグ &amp; ドロップすることも可能です。表示中のファイルがある場合、ファイル名がこのエリアの上に表示されます。</p>
     <h3 id="メニュー">(3) メニュー</h3>
-    <p class="ja-indent">各種設定や操作を行います。[Threshold]、[Z-axis]、[Color]、[Size]、[View]、[Config]、[Drag action] の詳細は「<a href="#設定の変更">設定の変更</a>」を、[Reset camera] の詳細は「<a href="#視点の操作">視点の操作</a>」を、[Path] の詳細は「<a href="#経路の探索">経路の探索</a>」を、[Save image] の詳細は「<a href="#画像の保存">画像の保存</a>」をご覧ください。[Close (Open) Controls] をクリックするとメニューを折りたたむ (開く) ことができます。</p>
+    <p class="ja-indent">各種設定や操作を行います。[Threshold]、[Z-axis]、[Color]、[Size]、[View]、[Config]、[Drag action]、[Rotation] の詳細は「<a href="#設定の変更">設定の変更</a>」を、[Reset camera] の詳細は「<a href="#視点の操作">視点の操作</a>」を、[Path] の詳細は「<a href="#経路の探索">経路の探索</a>」を、[Save image] の詳細は「<a href="#画像の保存">画像の保存</a>」をご覧ください。[Close (Open) Controls] をクリックするとメニューを折りたたむ (開く) ことができます。</p>
     <h3 id="細胞地図表示エリア">(4) 細胞地図表示エリア</h3>
     <p class="ja-indent">マウスによる操作が可能です。右下角 (Safari を除く) か下の水平線をドラッグすると縦幅を調整できます。詳細は「<a href="#視点の操作">視点の操作</a>」をご覧ください。</p>
     <h3 id="選択中の細胞の情報">(5) 選択中の細胞の情報</h3>
     <p class="ja-indent">選択中の各細胞の情報や細胞集団の統計量、経路上の特徴量のグラフが表示されます。右下をドラッグすると縦幅を調整できます。詳細は「<a href="#選択中の細胞の情報の表示について">選択中の細胞の情報の表示について</a>」をご覧ください。Selected cells 右側に表示される細胞数をクリックすると、表の内容が CSV 形式で保存されます。</p>
+
+
     <h2 id="入力ファイルの形式">入力ファイルの形式</h2>
     <p class="ja-indent">次の条件を満たしている必要があります。</p>
     <ul>
@@ -67,45 +77,59 @@
       <li>文字コードは UTF-8 である</li>
       <li>CSV 形式であり、区切り文字はカンマ (",") である</li>
       <li>1 行目はヘッダー行で、列名を表す</li>
-      <li>同名の列が複数存在しない</li>
-      <li>2 行目以降の各行が 1 個の細胞を表す</li>
-      <li>「CellID」「X」「Y」「Potential」列が存在する (大文字/小文字の違いや、空白文字の存在は問題なし)</li>
+      <li>2 行目以降の各行が 1 個の細胞の情報を表す</li>
       <li>全ての行で列数が等しい</li>
-      <li>次の「<a href="#各列が表すもの">各列が表すもの</a>」で数値として解釈される列に有限の数値が書かれている</li>
+      <li>同名の列が複数存在しない</li>
+      <li>1 列目は細胞名である (ヘッダー文字列は任意)</li>
+      <li>2 列目以降に細胞の<em>x</em> 座標、<em>y</em> 座標、およびポテンシャルのデータ列が存在する</li>
+      <li>細胞の <em>x</em> 座標のデータ列のヘッダー文字列は「X」である</li>
+      <li>細胞の <em>y</em> 座標のデータ列のヘッダー文字列は「Y」である</li>
+      <li>細胞のポテンシャルのデータ列のヘッダー文字列は「Potential」である</li>
+      <li>細胞種のデータ列は 0 列以上含む</li>
+      <li>細胞種のデータ列のヘッダー文字列は、「Annotation」ないしは、「Annotation_」、「Annote_」、「Ann_」または「A_」から始まりその後が (英数大文字小文字が一文字以上) の形式である</li>
+      <li>速度ベクトルのデータ列は、x 方向のデータおよび y 方向のデータを 1 セットとし、0 セット以上含む</li>
+      <li>速度ベクトルのデータ列は、x 方向のデータ列および y 方向のデータ列が、この順番で隣り合って並んでいる</li>
+      <li>速度ベクトルのデータ列のヘッダー文字列は「ラベル_x」および「ラベル_y」の形式である</li>
+      <li>細胞名および細胞種以外の列には有限の数値が書かれている</li>
+      <li>上記のヘッダー文字列に一致しない列は、<em>z</em> 座標の候補となる特徴量 (数値) である</li>
     </ul>
-    <p class="no-indent">満たしていない場合、読み込みエラーとなったり、正しく読み込めなかったり、読み込み後に文字化けしたりします。なお、空行や空白文字のみの行は読み込み時にスキップされます。</p>
-    <h3 id="各列が表すもの">各列が表すもの</h3>
-    <p class="ja-indent">ファイル中の各列は列名により次のように解釈されます。</p>
+    <p class="ja-indent">上記を満たしていない場合、読み込みエラーとなったり、正しく読み込めなかったり、読み込み後に文字化けしたりします。なお、空行や空白文字のみの行は読み込み時にスキップされます。なお、ヘッダー文字列は、大文字/小文字および空白文字の有無は区別しません。</p>
+    <p class="ja-indent">また、本プログラムの js フォルダ内にある "initialData.js" ファイルに、指定されたフォーマットで入力ファイルの内容を記載しておくと、プログラムの起動時に入力内容が自動で可視化されます。"initialData.js" ファイルのフォーマットは次の通りです。</p>
     <ul>
-      <li>「CellID」: 細胞名</li>
-      <li>「X」: <em>x</em> 座標 (数値)</li>
-      <li>「Y」: <em>y</em> 座標 (数値)</li>
-      <li>「Potential」: 細胞のポテンシャル (数値、<em>z</em> 座標の候補)</li>
-      <li>「Annotation」: 細胞種名</li>
-      <li>その他の名前: <em>z</em> 座標の候補となる特徴量 (数値)</li>
+      <li>1 行目は 「window.initialData = {」 である</li>
+      <li>2 行目は「"fileName":"ファイル名"」である</li>
+      <li>3 行目以降は「"data":’入力ファイルの内容 (CSV 形式の文字列) ’」 である</li>
+      <li>最終行は「};」である</li>
     </ul>
-    <p class="no-indent">なお、大文字/小文字が違ったり、空白文字が存在していても同様に解釈されます。</p>
+
+
     <h2 id="可視化の手順">可視化の手順</h2>
     <p class="ja-indent"><a href="#ファイル選択エリア">ファイル選択エリア</a>から入力ファイルを選択すると、現在の設定に基づいて自動で可視化が行われます。</p>
+
+
     <h2 id="可視化された細胞地図の見方">可視化された細胞地図の見方</h2>
     <img class="figure" style="width: 800px; height: 440px;" src="img/visualized_cell_map.png">
     <h3 id="カラー-バー">(1) カラー バー</h3>
     <p class="ja-indent"><a href="#color">[Color]</a> &gt; <a href="#surface">[Surface]</a> および <a href="#color">[Color]</a> &gt; <a href="#cells">[Cells]</a> で選択したカラー マップと特徴量の最大値、最小値が表示されます。</p>
     <h3 id="細胞地図">(2) 細胞地図</h3>
-    <p class="ja-indent">Delaunay 三角形分割の結果のうち、<a href="#threshold">[Threshold]</a> の設定で除去されるものを除いた三角形と個々の細胞を表す点群が描画されます。面の色は <a href="#color">[Color]</a> &gt; <a href="#surface">[Surface]</a> &gt; [Feature] で指定された特徴量が <a href="#color">[Color]</a> &gt; <a href="#surface">[Surface]</a> &gt; [Min]/[Max] の範囲内で、<a href="#color">[Color]</a> &gt; <a href="#surface">[Surface]</a> &gt; [Color map] で指定したカラー マップに基づいて表示されます。点群の色は面とは独立に、<a href="#color">[Color]</a> &gt; <a href="#cells">[Cells]</a> &gt; [Feature] で指定された特徴量が反映されます。</p>
+    <p class="ja-indent">Delaunay 三角形分割の結果のうち、<a href="#threshold">[Threshold]</a> で設定した値から算出された特定の三角形を除いた三角形が描画されます。詳細は「<a href="#可視化の仕様">可視化の仕様</a>」をご覧ください。面の色は <a href="#color">[Color]</a> &gt; <a href="#surface">[Surface]</a> &gt; [Feature] で指定された特徴量が <a href="#color">[Color]</a> &gt; <a href="#surface">[Surface]</a> &gt; [Min]/[Max] の範囲内で、<a href="#color">[Color]</a> &gt; <a href="#surface">[Surface]</a> &gt; [Color map] で指定したカラー マップに基づいて表示されます。点群の色は面とは独立に、<a href="#color">[Color]</a> &gt; <a href="#cells">[Cells]</a> &gt; [Feature] で指定された特徴量が反映されます。</p>
     <img class="figure" style="width: 300px; height: 300px;" src="img/cell_points.png">
     <h3 id="アノテーション">(3) アノテーション</h3>
-    <p class="ja-indent">入力データに「Annotation」列が含まれる場合、各アノテーションに属する細胞集団の平均の位置にアノテーションのラベルが表示されます。クリックするとそのアノテーションに属する細胞をまとめて選択できます。Shift または Ctrl (Windows) もしくは Command (mac) キーを押しながらクリックすると、それまでの選択対象に追加されます。</p>
+    <p class="ja-indent">入力データに「Annotation」列が含まれる場合、<a href="#view">[View]</a> に選択できる「Annotation」列がリスト形式で表示されます。「Annotation」列を指定すると、各アノテーションに属する細胞集団の平均の位置にアノテーションのラベルが表示されます。クリックするとそのアノテーションに属する細胞をまとめて選択できます。Shift または Ctrl (Windows) もしくは Command (mac) キーを押しながらクリックすると、それまでの選択対象に追加されます。</p>
+
+
     <h2 id="可視化の仕様">可視化の仕様</h2>
     <ol>
       <li>入力データ中の細胞を表す点の集合を <em>xy</em> 平面上で Delaunay 三角形分割します。</li>
-      <li>1. を構成する三角形を面積もしくは最長辺の長さ (<a href="#threshold">[Threshold]</a> &gt; [Type] で指定) の順に並べ替え、その上位 <em>t</em>% (ただし <em>t</em> は <a href="#threshold">[Threshold]</a> &gt; [%] で指定) を可視化の対象から除外します。</li>
+      <li>1. を構成する三角形から特定の三角形を除外して表示します。除外する三角形は、面積 (Volume) が上位 <em>s</em>% に属する三角形と最長辺の長さ (Longest edge) が上位<em>t</em>% に属する三角形の集合の論理和です。(ただし <em>s</em> および <em>t</em> はそれぞれ <a href="#threshold">[Threshold]</a> にて設定した値です)</li>
       <li>各点の <em>z</em> 座標は <a href="#z-axis">[Z-axis]</a> &gt; [Feature] で指定した特徴量となります。ただし、表示時には <a href="#z-axis">[Z-axis]</a> &gt; [Scale] で指定した値でスケーリングされます。</li>
       <li>面と細胞群は「<a href="#可視化された細胞地図の見方">可視化された細胞地図の見方</a>」で述べた方法で着色されます。</li>
     </ol>
+
+
     <h2 id="設定の変更">設定の変更</h2>
     <p class="ja-indent">次の図は展開した状態のメニューです。</p>
-    <img class="figure" style="width: 239px; height: 812px;" src="img/opened_menu.png">
+    <img class="figure" style="width: 239px; height: 1041px;" src="img/opened_menu.png">
     <p class="ja-indent">以下、各設定項目について説明します。</p>
     <h3 id="threshold">[Threshold]</h3>
     <p class="ja-indent">三角形分割の三角形を除去する閾値を指定します。詳細は「<a href="#可視化の仕様">可視化の仕様</a>」をご覧ください。</p>
@@ -116,6 +140,12 @@
     <p class="ja-indent">細胞地図の面の色を指定します。[Set min/max to feature range] ボタンから、[Min]/[Max] をそれぞれ [Feature] の最小値/最大値に設定できます。詳細は「<a href="#細胞地図">可視化された細胞地図の見方</a>」をご覧ください。</p>
     <h4 id="cells">[Cells]</h4>
     <p class="ja-indent">[Surface] と同様の項目が展開されます。細胞を表す点の色の設定を行います。</p>
+    <h4 id="mesh">[Mesh]</h4>
+    <p class="ja-indent"><a href="#細胞地図">細胞地図</a>のメッシュ (三角形分割した三角形の辺) の色を指定するカラー ピッカーです。</p>
+    <h4 id="streamline">[Streamline]</h4>
+    <p class="ja-indent"><a href="#細胞地図">細胞地図</a>上に表示したストリームラインの色を指定するカラー ピッカーです。</p>
+    <h4 id="contour">[Contour]</h4>
+    <p class="ja-indent"><a href="#細胞地図">細胞地図</a>の等高線の色を指定するカラー ピッカーです。</p>
     <h4 id="background">[Background]</h4>
     <p class="ja-indent"><a href="#細胞地図表示エリア">細胞地図表示エリア</a>の背景色を指定するカラー ピッカーです。</p>
 
@@ -128,16 +158,28 @@
     <p class="ja-indent">選択中の細胞を表す点のサイズを指定します。</p>
     <h4 id="path-width">[Path width]</h4>
     <p class="ja-indent">経路の太さを指定します。</p>
+    <h4 id="contour-width">[Contour width]</h4>
+    <p class="ja-indent">等高線の太さを指定します。</p>
 
     <h3 id="view">[View]</h3>
     <h4 id="annotation">[Annotation]</h4>
     <p class="ja-indent">アノテーションのラベルの表示/非表示を切り替えます。</p>
+    <h4 id="annotation-type">[Annotation type]</h4>
+    <p class="ja-indent">アノテーションの種類を切り替えます。</p>
     <h4 id="surface-1">[Surface]</h4>
     <p class="ja-indent">面の表示/非表示を切り替えます。面用のカラー バー表示も連動します。</p>
+    <h4 id="surface-mesh-1">[Surface mesh]</h4>
+    <p class="ja-indent">メッシュの表示/非表示を切り替えます。</p>
     <h4 id="cell-1">[Cell]</h4>
-    <p class="ja-indent">細胞を表す点の表示/非表示を切り替えます。細胞用のカラー バー表示も連動します。</p>
+    <p class="ja-indent">細胞を表す点の表示率を変更します。細胞用のカラー バー表示も連動します。</p>
     <h4 id="highlight-selection">[Highlight selection]</h4>
     <p class="ja-indent">選択中の細胞を強調するかどうかを切り替えます。</p>
+    <h4 id="streamline">[Streamline]</h4>
+    <p class="ja-indent">ストリームラインの表示/非表示を切り替えます。</p>
+    <h4 id="velocity-type">[Velocity type]</h4>
+    <p class="ja-indent">ストリームラインの表示に用いる速度ベクトルの種類を切り替えます。</p>
+    <h4 id="contour">[Contour]</h4>
+    <p class="ja-indent">等高線の表示本数を変更します。</p>
     <h4 id="grid">[Grid]</h4>
     <p class="ja-indent">グリッドの表示/非表示を切り替えます。</p>
     
@@ -149,20 +191,33 @@
     <h4 id="save-config">[Save]</h4>
     <p class="ja-indent">JSON 形式の設定ファイルをダウンロードします。</p>
 
+    <h3 id="path">[Path]</h3>
+    <h4 id="find-2d-path">[Find 2D path]</h4>
+    <p class="ja-indent"><em>z</em> 座標を考慮しない探索を行います。詳細は「<a href="#経路の探索">経路の探索</a>」をご覧ください。</p>
+    <h4 id="find-3d-path">[Find 3D path]</h4>
+    <p class="ja-indent"><em>z</em> 座標を考慮した探索を行います。詳細は「<a href="#経路の探索">経路の探索</a>」をご覧ください。</p>
+    <h4 id="register">[Register for 3D path]</h4>
+    <p class="ja-indent"><em>z</em> 座標を考慮した探索を行うときのパラメータを変更します。詳細は「<a href="#経路の探索">経路の探索</a>」をご覧ください。</p>
+
     <h3 id="drag-action">[Drag action]</h3>
     <p class="ja-indent"><a href="#細胞地図表示エリア">細胞地図表示エリア</a>でマウスの左ボタンを押しながらドラッグしたときの挙動を指定します。詳細は「<a href="#視点の操作">視点の操作</a>」および「<a href="#ドラッグによる選択">ドラッグによる選択</a>」をご覧ください。</p>
 
+    <h3 id="rotation">[Rotation]</h3>
+    <p class="ja-indent"><a href="#細胞地図表示エリア">細胞地図表示エリア</a>でマウスの左ボタンを押しながらドラッグしたときの回転軸を指定します。詳細は「<a href="#視点の操作">視点の操作</a>」をご覧ください。</p>
+
+
     <h2 id="視点の操作">視点の操作</h2>
-    <p class="ja-indent"><a href="#細胞地図表示エリア">細胞地図表示エリア</a>でのマウス操作により、回転、ズーム、パンが可能です。最初の視点に戻すには、[Reset camera] をクリックします。</p>
+    <p class="ja-indent"><a href="#細胞地図表示エリア">細胞地図表示エリア</a>でのマウス操作により、回転、ズーム、パンが可能です。最初の視点位置に戻すには、[Reset camera] をクリックします。</p>
     <h3 id="回転">回転</h3>
-    <p class="ja-indent"><a href="#drag-action">[Drag action]</a> が [Camera rotation] のときに限り、マウスの左ボタンを押しながらドラッグすることで視点を回転できます。</p>
+    <p class="ja-indent"><a href="#drag-action">[Drag action]</a> が [Camera rotation] のときに限り、マウスの左ボタンを押しながらドラッグすることで細胞地図を回転できます。<a href="#rotation">[Rotation]</a> が [Current coordinate] の場合は、そのときの視点を中心として細胞地図が回転します。<a href="#rotation">[Rotation]</a> が [Origin] の場合は、細胞地図の原点を中心として細胞地図が回転します。</p>
     <h3 id="ズーム">ズーム</h3>
     <p class="ja-indent">ホイールによるスクロールでズーム イン/アウトができます。</p>
     <h3 id="パン">パン</h3>
     <p class="ja-indent">マウスの右ボタンを押しながらドラッグすることで視点を画面と平行に移動できます。</p>
 
+
     <h2 id="細胞の選択">細胞の選択</h2>
-    <p class="ja-indent">クリックやドラッグにより細胞の選択が可能です。選択された細胞は次の図のように赤く強調表示されます。</p>
+    <p class="ja-indent">クリックやドラッグにより細胞の選択が可能です。選択された細胞は次の図のように赤く強調表示されます。細胞が選択されている状態で別の場所をクリックしたり、細胞の表示率を変更すると、細胞の選択が解除されます。</p>
     <img class="figure" style="width: 180px; height: 180px;" src="img/selected_cells.png">
     <h3 id="クリックによる選択">クリックによる選択</h3>
     <p class="ja-indent">細胞を表す点をクリックすると、その細胞だけが選択された状態になります。Shift または Ctrl (Windows) もしくは Command (mac) キーを押しながらクリックすると、それまでの選択対象に加えて新たにクリックされた細胞が選択されます。</p>
@@ -172,16 +227,19 @@
     <p class="ja-indent">1 つのアノテーションに属する細胞をまとめて選択することができます。方法は「<a href="#アノテーション">アノテーション</a>」をご覧ください。</p>
     <h3 id="選択中の細胞の情報の表示について">選択中の細胞の情報の表示について</h3>
     <p class="ja-indent">選択中の細胞の情報が<a href="#選択中の細胞の情報">選択中の細胞の情報</a>に表として表示されます。入力データ中に存在していた座標や特徴量などの情報が 1 細胞につき 1 行表示されるほか、表の最後に Min. (最小値)、Max. (最大値)、Mean (平均)、Variance (分散)、SD (標準偏差)、CV (変動係数) といった統計量が表示されます。</p>
-  
+ 
+    
     <h2 id="経路の探索">経路の探索</h2>
     <p class="ja-indent">[Path] 内のコマンドを用いて、点 (細胞) を 2 個選択した状態からその 2 点間を結ぶ最短経路を探索することができます。探索対象は現在表示されている辺です。距離として <em>xy</em> 平面上でのユークリッド距離が用いられます。経路が見つかった場合、経路が赤い線で表示され、経路上にある細胞が選択された状態になります。経路が見つからなかった場合、その旨がダイアログで通知されます。</p>
     <h3 id="z-座標を考慮しない探索"><em>z</em> 座標を考慮しない探索</h3>
     <p class="ja-indent">[Find 2D path] をクリックすると実行されます。<em>x</em>、<em>y</em> 座標のみを考慮した探索が行われます。</p>
     <h3 id="z-座標を考慮する探索"><em>z</em> 座標を考慮する探索</h3>
-    <p class="ja-indent">[Find 3D path] をクリックすると実行されます。経路上で <em>z</em> 座標が広義単調減少もしくは広義単調増加する経路のみが探索されます。</p>
+    <p class="ja-indent">[Find 3D path] をクリックすると実行されます。<em>z</em> 座標の増減を考慮して経路が探索されます。<em>z</em> 座標が減少する場合に比べ、<em>z</em> 座標が増加する場合の方が、探索の時の重みが大きくなるアルゴリズム使用して探索を行います。[Register for 3D path] で設定する register の値は、減少時と増加時の重みの比を制御する値です。register の値が 0 のときの探索は、<a href="#z-座標を考慮しない探索"><em>z</em> 座標を考慮しない探索</a>に相当します。</p>
+    <p class="ja-indent">経路を表示した状態で [Register for 3D path] を変更すると、register の値を変更して再計算し、新たに求めた経路を表示します。なお表示中の経路が、<a href="#z-座標を考慮しない探索"><em>z</em> 座標を考慮しない探索</a>を行った場合の状態であっても、register の値を変更して、<a href="#z-座標を考慮する探索"><em>z</em> 座標を考慮する探索</a>を行います。</p>
     <p class="ja-indent">経路が見つかった場合には、<a href="#選択中の細胞の情報">選択中の細胞の情報</a>欄の最下部に、下図のような経路上の細胞を横軸、特徴量を縦軸に持つ折れ線グラフが表示されます。グラフの表示中に <a href="#z-axis">[Z-axis]</a> の [Feature] を変更することで、表示される特徴量を動的に変更することも可能です。</p>
     <img class="figure" style="width: 800px; height: 193px;" src="img/plot.png">
 
+    
     <h2 id="画像の保存">画像の保存</h2>
     <p class="ja-indent">[Save image] をクリックすると<a href="#細胞地図表示エリア">細胞地図表示エリア</a>の画像を PNG 形式でダウンロードできます。メニューは出力されません。</p>
 

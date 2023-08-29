@@ -1,4 +1,5 @@
 const CellMapDataReader = require("../../cellMapViewer/cellMapGraph/cellMapDataReader");
+const { defaultAnnotationLabel } = require("../../cellMapViewer/cellMapGraph/dataLabelConst");
 const { areaLabel } = require("../../cellMapViewer/cellMapGraph/threshTypeLabelConst");
 
 
@@ -18,7 +19,7 @@ test("read2dArray", () => {
 
   // エラーを出させる用の関数です。
   function errorWhileReading() {
-    CellMapDataReader.read2dArray(data, areaLabel, 0);
+    CellMapDataReader.read2dArray(data);
   }
 
   // 列名重複時のエラーの確認です。
@@ -26,9 +27,6 @@ test("read2dArray", () => {
   expect(errorWhileReading).toThrow(redundantColNameError);
 
   // 必ずあるはずの列がない場合のエラーの確認です。
-  // 細胞名の列
-  data = [[xLabel, yLabel, potentialLabel]];
-  expect(errorWhileReading).toThrow(columnDoesNotExistError(idLabel));
   // x 座標の列
   data = [[idLabel, yLabel, potentialLabel]];
   expect(errorWhileReading).toThrow(columnDoesNotExistError(xLabel));
@@ -44,14 +42,14 @@ test("read2dArray", () => {
   expect(errorWhileReading).toThrow(jaggedCsvError(2));
 
   // Annotation がない場合に null が入ることの確認です。
-  // 同時に、列順を逆にしてもエラーが出ないことも確認します。
-  data = [[potentialLabel, yLabel, xLabel, idLabel], [3, 2, 1, "id"]];
-  graph = CellMapDataReader.read2dArray(data, areaLabel, 0);
-  expect(graph.annotationArray).toBe(null);
+  // 同時に、idLabel 以外の列順を逆にしてもエラーが出ないことも確認します。
+  data = [[idLabel, potentialLabel, yLabel, xLabel], ["id", 3, 2, 1]];
+  graph = CellMapDataReader.read2dArray(data);
+  expect(graph.annotationArray).toStrictEqual(new Array());
 
   // 模擬的なデータを作成します。
   data = [
-    [idLabel, xLabel, yLabel, potentialLabel, annotationLabel, "other"],
+    [idLabel, xLabel, yLabel, potentialLabel, defaultAnnotationLabel, "other"],
     ["Cell0", 1, 0, 10, "type0", 20],
     ["Cell1", 0, 0, 11, "type1", 21],
     ["Cell2", 0, 2, 12, "type2", 22],
@@ -63,7 +61,7 @@ test("read2dArray", () => {
   const xWrongData = JSON.parse(JSON.stringify(data));
   xWrongData[1][1] = "string";
   expect(function() {
-    CellMapDataReader.read2dArray(xWrongData, areaLabel, 30);
+    CellMapDataReader.read2dArray(xWrongData);
   }).toThrow(
     notFiniteNumberError(2, 2)
   );
@@ -71,7 +69,7 @@ test("read2dArray", () => {
   const yWrongData = JSON.parse(JSON.stringify(data));
   yWrongData[1][2] = "string";
   expect(function() {
-    CellMapDataReader.read2dArray(yWrongData, areaLabel, 30);
+    CellMapDataReader.read2dArray(yWrongData);
   }).toThrow(
     notFiniteNumberError(2, 3)
   );
@@ -79,7 +77,7 @@ test("read2dArray", () => {
   const potentialWrongData = JSON.parse(JSON.stringify(data));
   potentialWrongData[1][3] = "string";
   expect(function() {
-    CellMapDataReader.read2dArray(potentialWrongData, areaLabel, 30);
+    CellMapDataReader.read2dArray(potentialWrongData);
   }).toThrow(
     notFiniteNumberError(2, 4)
   );
@@ -87,13 +85,13 @@ test("read2dArray", () => {
   const otherWrongData = JSON.parse(JSON.stringify(data));
   otherWrongData[1][5] = "string";
   expect(function() {
-    CellMapDataReader.read2dArray(otherWrongData, areaLabel, 30);
+    CellMapDataReader.read2dArray(otherWrongData);
   }).toThrow(
     notFiniteNumberError(2, 6)
   );
 
   // 以下、最後まで読み込める場合の確認です。
-  graph = CellMapDataReader.read2dArray(data, areaLabel, 30);
+  graph = CellMapDataReader.read2dArray(data);
 
   // 返り値の linkedNodeSet の各プロパティの最後の要素の確認です。
   expect(graph.idArray[3]).toBe("Cell3");
@@ -117,12 +115,6 @@ test("read2dArray", () => {
 
   // 返り値の zFeatureType が Potential (デフォルト) になっていることの確認です。
   expect(graph.zFeatureType).toBe(potentialLabel);
-
-  // 返り値の triangleThreshType が正しく設定されていることの確認です。
-  expect(graph.triangleThreshType).toBe(areaLabel);
-
-  // 返り値の triangleThreshPercent が正しく設定されていることの確認です。
-  expect(graph.triangleThreshPercent).toBe(30);
 });
 
 // _checkTriangles メソッドのテストです。

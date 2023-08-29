@@ -61,6 +61,10 @@
 				RIGHT: THREE.MOUSE.PAN
 			}; // internals
 
+			// CJS: 追加コードここから
+			this.isRotateAtOrigin = false;
+			// 追加コードここまで
+
 			this.target = new THREE.Vector3();
 			const EPS = 0.000001;
 			const lastPosition = new THREE.Vector3();
@@ -134,7 +138,6 @@
 					objectSidewaysDirection = new THREE.Vector3(),
 					moveDirection = new THREE.Vector3();
 				return function rotateCamera() {
-
 					moveDirection.set( _moveCurr.x - _movePrev.x, _moveCurr.y - _movePrev.y, 0 );
 					let angle = moveDirection.length();
 
@@ -151,8 +154,13 @@
 						axis.crossVectors( moveDirection, _eye ).normalize();
 						angle *= scope.rotateSpeed;
 						quaternion.setFromAxisAngle( axis, angle );
-
 						_eye.applyQuaternion( quaternion );
+
+						// CJS: 追加コードここから
+						if (scope.isRotateAtOrigin) {
+							scope.target.set(0,0,0);
+						}
+						// 追加コードここまで
 
 						scope.object.up.applyQuaternion( quaternion );
 

@@ -2,9 +2,11 @@
 
 
 if (typeof require !== "undefined") {
-  global.Papa = require("../../libs/PapaParse/papaparse");
+  global.Papa = require("../../libs/PapaParse/papaparse.min.js");
   const errorConst = require("./graphErrorConst");
+  global.emptyHeaderColError = errorConst.emptyHeaderColError;
   global.redundantColNameError = errorConst.redundantColNameError;
+  global.vectorColumnsAreNotPairedError = errorConst.vectorColumnsAreNotPairedError;
   global.columnDoesNotExistError = errorConst.columnDoesNotExistError;
   global.jaggedCsvError = errorConst.jaggedCsvError;
   global.notFiniteNumberError = errorConst.notFiniteNumberError;
@@ -17,8 +19,10 @@ if (typeof require !== "undefined") {
   global.yLabel = labelConst.yLabel;
   global.potentialLabel = labelConst.potentialLabel;
   global.defaultZFeatureLabel = labelConst.defaultZFeatureLabel;
-  global.annotationLabel = labelConst.annotationLabel;
-  global.Delaunator = require("../../libs/delaunator/delaunator");
+  global.annotationLabelPattern = labelConst.annotationLabelPattern;
+  global.xVectorLabelPattern = labelConst.xVectorLabelPattern;
+  global.yVectorLabelPattern = labelConst.yVectorLabelPattern;
+  global.Delaunator = require("../../libs/delaunator/delaunator.min.js");
 }
 
 
@@ -35,19 +39,12 @@ class CellMapDataReader {
    *
    * @static
    * @param {File} file CSV ファイルを表す File オブジェクトです。
-   * @param {string} triangleThreshType 三角形分割の三角形を除去する閾値の
-   *     種類を表す文字列です。
-   * @param {number} triangleThreshPercent 三角形分割の三角形を除去する
-   *     閾値の値 (%) です。
    * @return {Promise} CSV ファイルを読み込んで
    *     結果となる CellMapGraph オブジェクトを resolve に渡す
    *     Promise オブジェクトです。
    * @memberof CellMapDataReader
    */
-  static readCsvPromise = (
-    file, triangleThreshType, triangleThreshPercent
-  ) => {
-
+  static readCsvPromise = (file) => {
     return new Promise((resolve, reject) => {
 
       // 読み込み完了時の動作を定義します。
@@ -55,9 +52,7 @@ class CellMapDataReader {
         // 読み込みが完了したら CellMapGraph オブジェクトに構造化し、
         // resolve に渡します。
         try {
-          const cellMapGraph = this.read2dArray(
-            results.data, triangleThreshType, triangleThreshPercent
-          );
+          const cellMapGraph = this.read2dArray(results.data);
           resolve(cellMapGraph);
         }
         // 構造化に失敗した場合です。
@@ -97,16 +92,10 @@ class CellMapDataReader {
    *
    * @static
    * @param {Array<Array<object>>} array 読み込む 2 次元配列です。
-   * @param {string} triangleThreshType 三角形分割の三角形を除去する閾値の
-   *     種類を表す文字列です。
-   * @param {number} triangleThreshPercent 三角形分割の三角形を除去する閾値の
-   *     値 (%) です。
    * @return {CellMapGraph} 2 次元配列が表す細胞地図のグラフです。
    * @memberof CellMapDataReader
    */
-  static read2dArray = (
-    array, triangleThreshType, triangleThreshPercent
-  ) => {
+  static read2dArray = (array) => {
 
     // ヘッダー行です。
     const header = array[0];
@@ -121,25 +110,27 @@ class CellMapDataReader {
     }
 
     // 各列のインデックスです。次のループで取得します。
-    let iIdCol = null;          // CellID
-    let iXCol = null;           // X
-    let iYCol = null;           // Y
-    let iPotentialCol = null;   // Potential
-    let iAnnotationCol = null;  // Annotation
+    const iIdCol = 0;         // CellID
+    let iXCol = null;         // X
+    let iYCol = null;         // Y
+    let iPotentialCol = null; // Potential
 
-    // その他の特徴量の列です。
+    // その他の特徴量の列インデックスです。
     const iOtherFeatureColList = [];
+    // アノテーションの列インデックスです。
+    const iAnnotationColList = []; 
+    // ベクトルの列インデックスです。
+    const iXVectorColList = []; 
+    const iYVectorColList = []; 
 
-    // ヘッダーの列をループし、上記各列のインデックスを取得します。
-    for (let iCol = 0; iCol < nCol; iCol++) {
+    // ヘッダーの 2 列目以降をループし、上記各列のインデックスを取得します。
+    for (let iCol = 1; iCol < nCol; iCol++) {
 
       // 列名です。空白文字、大文字小文字の違いは無視します。
+      if (header[iCol] === null) throw emptyHeaderColError;
       const colName = header[iCol].toLowerCase().replace(/\s+/g, "");
 
       switch (colName) {
-        case idLabel.toLowerCase():
-          iIdCol = iCol;
-          break;
         case xLabel.toLowerCase():
           iXCol = iCol;
           break;
@@ -149,18 +140,16 @@ class CellMapDataReader {
         case potentialLabel.toLowerCase():
           iPotentialCol = iCol;
           break;
-        case annotationLabel.toLowerCase():
-          iAnnotationCol = iCol;
-          break;
         default:
+          // その他の特徴量として登録し、さらにアノテーション列かベクトル列であるかを調べます。
           iOtherFeatureColList.push(iCol);
+          if (this._checkAnnotationLabel(colName)) iAnnotationColList.push(iCol);
+          else if (this._checkXVectorLabel(colName)) iXVectorColList.push(iCol);
+          else if (this._checkYVectorLabel(colName)) iYVectorColList.push(iCol);
       }
     }
 
     // 必ずあるはずの列がなかった場合です。
-    if (iIdCol === null) {
-      throw columnDoesNotExistError(idLabel);
-    }
     if (iXCol === null) {
       throw columnDoesNotExistError(xLabel);
     }
@@ -171,6 +160,29 @@ class CellMapDataReader {
       throw columnDoesNotExistError(potentialLabel);
     }
 
+    // ベクトル列が、x と y の対のデータになっているかを確認します。
+
+    // x と y の列数が等しいかを確認します。
+    if (iXVectorColList.length !== iYVectorColList.length) throw vectorColumnsAreNotPairedError;
+
+    // 列インデックスとヘッダー文字列の内容を 1 ペアずつ確認します。
+    const vectorLabelList = [];
+    for (let i = 0; i < iXVectorColList.length; i++) {
+
+      // x　と　y の列が x、y の順で並んでいるかを確認します。
+      const xVectorIndex = iXVectorColList[i];
+      const yVectorIndex = iYVectorColList[i];     
+      if (xVectorIndex !== yVectorIndex - 1) throw vectorColumnsAreNotPairedError;
+
+      // ヘッダーの末尾 (_x または _y) を除去した部分の文字列が一致するかを確認します。
+      const xHeadLabel = header[xVectorIndex].replace(/\s+/g, "").slice(0, -2);
+      const yHeadLabel = header[yVectorIndex].replace(/\s+/g, "").slice(0, -2);
+      if (xHeadLabel !== yHeadLabel) throw vectorColumnsAreNotPairedError;
+      vectorLabelList.push(xHeadLabel);
+    }
+    // 作成したヘッダー リストの長さを確認します。
+    if (vectorLabelList.length !== iXVectorColList.length) throw vectorColumnsAreNotPairedError; 
+    
     // ノード (細胞) 数です。
     const nNode = array.length - 1;
 
@@ -179,10 +191,17 @@ class CellMapDataReader {
     const xyArray = []; // [[x, y]] (2 次元配列です。)
     const potentialArray = new Float64Array(nNode); // Potential
 
-    // 上記以外のその他の特徴量を格納する連想配列を準備します。
+    // その他の特徴量を格納する連想配列を準備します。
     const otherFeatureArrayDict = {};
     for (const i of iOtherFeatureColList) {
-      otherFeatureArrayDict[header[i]] = new Float64Array(nNode);
+      // 配列の要素が文字列 (アノテーション) の場合です。
+      if (iAnnotationColList.includes(i)) {
+        otherFeatureArrayDict[header[i].replace(/\s+/g, "")] = new Array(nNode);
+      }
+      // 配列の要素が数値 (アノテーション以外) の場合です。
+      else {
+        otherFeatureArrayDict[header[i].replace(/\s+/g, "")] = new Float64Array(nNode);
+      }
     }
 
     // 各細胞をループしつつ、各配列に値を振り分けます。
@@ -198,36 +217,43 @@ class CellMapDataReader {
         throw jaggedCsvError(iRowInInput);
       }
 
+      // CellID、x、y、Potential の配列に値を格納します。
+      // 値が数値であることを確認しながら格納します。
       idArray.push(row[iIdCol]);
-      checkIfFiniteNumber(row[iXCol], iNode, iXCol);
-      checkIfFiniteNumber(row[iYCol], iNode, iYCol);
-      xyArray.push(new Float64Array([row[iXCol], row[iYCol]]))
-      checkIfFiniteNumber(row[iPotentialCol], iNode, iPotentialCol);
+      this._checkIfFiniteNumber(row[iXCol], iNode, iXCol);
+      this._checkIfFiniteNumber(row[iYCol], iNode, iYCol);
+      xyArray.push(new Float64Array([row[iXCol], row[iYCol]]));
+      this._checkIfFiniteNumber(row[iPotentialCol], iNode, iPotentialCol);
       potentialArray[iNode] = row[iPotentialCol];
 
+      // その他の特徴量の配列に値を格納します。
+      // アノテーション列の以外は、値が数値であるかを確認しながら格納します。
       for (const iFeatureCol of iOtherFeatureColList) {
-        const featureName = header[iFeatureCol];
-        checkIfFiniteNumber(row[iFeatureCol], iNode, iFeatureCol);
+        const featureName = header[iFeatureCol].replace(/\s+/g, "");
+        if (! iAnnotationColList.includes(iFeatureCol)) {
+          this._checkIfFiniteNumber(row[iFeatureCol], iNode, iFeatureCol);
+        }
         otherFeatureArrayDict[featureName][iNode] = row[iFeatureCol];
-      }
-
-    }
-
-    // Annotation の配列 (あれば) を作成します。
-    let annotationArray = null;
-    if (iAnnotationCol !== null) {
-      annotationArray = [];
-      for (const row of array.slice(1)) {
-        annotationArray.push(row[iAnnotationCol]);
       }
     }
 
     // その他の特徴量を CellMapFeature のリストに構造化します。
+    // アノテーション列および x ベクトル列のインデックスを収めた配列もあわせて作成します。
     const otherFeatureList = [];
+    const annotationIndexList = [];
+    const xVectorIndexList = [];
+    let i = 0;
     for (const key in otherFeatureArrayDict) {
+
+      const isNumber = ! isNaN(otherFeatureArrayDict[key][0]);
       otherFeatureList.push(
-        new CellMapFeature(key, otherFeatureArrayDict[key])
+        new CellMapFeature(key, otherFeatureArrayDict[key], isNumber)
       );
+
+      // アノテーション列または x ベクトル列のインデックスを配列に格納します。
+      if (! isNumber) annotationIndexList.push(i);
+      else if (this._checkXVectorLabel(key.toLowerCase()) && isNumber) xVectorIndexList.push(i);
+      i++;
     }
 
     // x および y 座標の情報をもとに Delaunay 三角形分割を行います。
@@ -264,17 +290,53 @@ class CellMapDataReader {
 
     // ノードのデータを含むグラフ構造を返します。
     return new CellMapGraph(
-      idArray, xyArray, potentialArray, annotationArray, otherFeatureList,
+      idArray, xyArray, potentialArray, otherFeatureList, 
+      annotationIndexList, vectorLabelList, xVectorIndexList,
       edgeListArray, areaSortedTriangles, longestEdgeSortedTriangles,
-      allEdgeList, defaultZFeatureLabel, triangleThreshType,
-      triangleThreshPercent
+      allEdgeList
     );
+  }
 
-    // 数値であるべきセルが有限の数値であるかをチェックします。
-    function checkIfFiniteNumber(value, iNode, iCol) {
-      if (Number.isFinite(value)) return;
-      throw notFiniteNumberError(iNode + 2, iCol + 1);
+  /**
+   * 文字列が、細胞種を表すラベルかをチェックします。
+   * @param {string} lowerCaseString 小文字で表現された文字列です。
+   * @returns 細胞種を表すラベルであれば true、そうでなければ false を返します。
+   */
+  static _checkAnnotationLabel(lowerCaseString) {
+      return lowerCaseString.match(annotationLabelPattern) !== null;
     }
+
+  /**
+   * 文字列が、x ベクトルを表すラベルかをチェックします。
+   * @param {string} lowerCaseString 小文字で表現された文字列です。
+   * @returns x ベクトルを表すラベルであれば true、そうでなければ false を返します。
+   * @memberof CellMapDataReader
+   */
+  static _checkXVectorLabel(lowerCaseString) {
+    return lowerCaseString.match(xVectorLabelPattern) !== null;
+  }
+
+  /**
+   * 文字列が、y ベクトルを表すラベルかをチェックします。
+   * @param {string} lowerCaseString 小文字で表現された文字列です。
+   * @returns y ベクトルを表すラベルであれば true、そうでなければ false を返します。
+   * @memberof CellMapDataReader
+   */
+    static _checkYVectorLabel(lowerCaseString) {
+      return lowerCaseString.match(yVectorLabelPattern) !== null;
+    }
+
+  /**
+   * 数値であるべきセルが有限の数値であるかをチェックします。
+   * @param {*} value チェック対象の値です。
+   * @param {number} iNode ノード番号です。セルの行数 - 2 の値です。
+   * @param {number} iCol 列番号です。
+   * @returns {} セルの値が有限で無ければ例外を投げます。
+   * @memberof CellMapDataReader
+   */
+  static _checkIfFiniteNumber = (value, iNode, iCol) => {
+    if (Number.isFinite(value)) return;
+    throw notFiniteNumberError(iNode + 2, iCol + 1);
   }
 
   /**

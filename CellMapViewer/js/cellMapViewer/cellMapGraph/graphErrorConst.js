@@ -22,6 +22,9 @@ function invalidThreshTypeError(threshTypeName) {
 const invalidThreshPercentError = new CellMapError(
   "Threshold value (%) is out of range [0, 100]."
 );
+const vectorColumnsAreNotPairedError = new CellMapError(
+  "x vector and y vector columns are not paired in the input file."
+);
 
 // CellMapGraph クラスでのみ出るエラーです。
 const emptyGraphError = new CellMapError(
@@ -30,6 +33,9 @@ const emptyGraphError = new CellMapError(
 const lengthsNotEqualError = new CellMapError(
   "Lengths of the arrays passed to the constructor are not equal."
 );
+const vectorDataError = new CellMapError(
+  "Lengths of vector label and vector data set are not equal."
+);
 
 // CellMapDataReader クラスでのみ出るエラーです。
 function fileReaderError(error) {
@@ -37,6 +43,12 @@ function fileReaderError(error) {
     `Error while reading file: ${error.message}`
   );
 }
+const emptyHeaderColError = new CellMapError(
+  "Header line in input file contains empty cell except first column."
+);
+const initialDataJsError = new CellMapError(
+  "Value of Data property in initialData.js is invaid format."
+);
 const redundantColNameError = new CellMapError(
   "Input file contains redundant column names."
 );
@@ -79,13 +91,19 @@ const nodeIndexTooLargeError = new CellMapError(
 const startGoalIdenticalError = new CellMapError(
   "Start node and goal node are identical."
 );
+const registerValueError = new CellMapError(
+  "Register value is out of range [0, 1]."
+);
 
 
 if (typeof module !== "undefined") {
   exports.featureDoesNotExistError = featureDoesNotExistError;
   exports.fileReaderError = fileReaderError;
+  exports.emptyHeaderColError = emptyHeaderColError;
+  exports.initialDataJsError = initialDataJsError;
   exports.redundantColNameError = redundantColNameError;
   exports.columnDoesNotExistError = columnDoesNotExistError;
+  exports.vectorColumnsAreNotPairedError = vectorColumnsAreNotPairedError;
   exports.jaggedCsvError = jaggedCsvError;
   exports.notFiniteNumberError = notFiniteNumberError;
   exports.invalidThreshTypeError = invalidThreshTypeError;
@@ -95,8 +113,10 @@ if (typeof module !== "undefined") {
   exports.negativeNodeIndexError = negativeNodeIndexError;
   exports.negativeLengthError = negativeLengthError;
   exports.lengthsNotEqualError = lengthsNotEqualError;
+  exports.vectorDataError = vectorDataError;
   exports.floatPassedError = floatPassedError;
   exports.nodeIndexTooLargeError = nodeIndexTooLargeError;
   exports.startGoalIdenticalError = startGoalIdenticalError;
+  exports.registerValueError = registerValueError;
   exports.doesNotContainNodeError = doesNotContainNodeError;
 }

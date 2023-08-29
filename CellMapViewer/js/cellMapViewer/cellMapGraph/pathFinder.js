@@ -7,6 +7,7 @@ if (typeof require !== "undefined") {
   global.negativeNodeIndexError = errorConst.negativeNodeIndexError;
   global.nodeIndexTooLargeError = errorConst.nodeIndexTooLargeError;
   global.startGoalIdenticalError = errorConst.startGoalIdenticalError;
+  global.registerValueError = errorConst.registerValueError;
   global.doesNotContainNodeError = errorConst.doesNotContainNodeError;
 }
 
@@ -26,14 +27,14 @@ class PathFinder {
    *     リストの配列です。
    * @param {number} iStartNode 経路の始点を表すノードのインデックスです。
    * @param {number} iGoalNode 経路の終点を表すノードのインデックスです。
-   * @param {boolean} disableClimb true のとき、
    *     z 座標の低い方から高い方に向かう経路を除外して探索します。
-   * @return {Array<number>} 始点から終点に至るまでの
-   *     経路上のノードのインデックスの配列です。
-   *     経路が存在しない場合は空の配列を返します。
+   * @param {number} register 経路計算時の重みづけに用いるパラメーターです。
+   * @return {{path: {Array<number>}, distance: number}} 
+   *     始点から終点に至るまでの経路上のノードのインデックスの配列 (経路が存在しない場合は空の配列) と、
+   *     その経路の距離 (経路が存在しない場合は null) をもつオブジェクトです。
    * @memberof PathFinder
    */
-  static find = (edgeListArray, iStartNode, iGoalNode, disableClimb) => {
+  static find = (edgeListArray, iStartNode, iGoalNode, register) => {
 
     // 次の場合はエラーとします。
     // 始点や終点の値が整数でない
@@ -54,6 +55,10 @@ class PathFinder {
     if (iStartNode === iGoalNode) {
       throw startGoalIdenticalError;
     }
+    // register の値が 0 ~ 1 の範囲でない
+    if (register === null || register === undefined || register < 0 || 1 < register) {
+      throw registerValueError;
+    }
 
     // 以下、Dijkstra 法で始点から終点への最短経路を探索します。
 
@@ -64,7 +69,7 @@ class PathFinder {
     // 始点からの距離が最も短いノードの番号を後で格納する変数です。
     let iClosestNode = 0;
 
-    // 現時点で判明している、始点から各ノードへの最短経路の長さのリストです。
+    // 現時点で判明している、始点から各ノードへの最短経路の重み付け長さのリストです。
     // ノード番号をキーにして距離を格納します。
     const minDistanceList = {};
 
@@ -102,7 +107,7 @@ class PathFinder {
       // 別の連結成分の探索が始まった場合です。
       // 経路は存在しないものとして、空のリストを返します。
       if (minDistanceList[iClosestNode] === Infinity) {
-        return [];
+        return { path: [], distance: null };
       }
 
       // 取り出されたノードが終点と一致した場合、
@@ -121,20 +126,14 @@ class PathFinder {
           currentNode = previousNodeList[currentNode];
         }
         // 始点以外を含む逆順の最短経路を逆順にして返します。
-        return result.reverse();
+        return {path: result.reverse(), distance: minDistanceList[iGoalNode]};
       }
 
       // 取り出されたノードが終点ノードではない場合です。
       // そのノードに接続された辺をループします。
       for (const edge of edgeListArray[iClosestNode]) {
-
         // 無効な辺はスキップします。
         if (! edge.enabled) {
-          continue;
-        }
-
-        // z 座標の登りを禁止する場合、登る辺はスキップします。
-        if (disableClimb && isLower(iClosestNode, edge)) {
           continue;
         }
 
@@ -144,10 +143,24 @@ class PathFinder {
         // 辺の先にある隣接ノードを取り出します。
         const nextNode = edge.getOppositeNode(iClosestNode);
 
+        // 辺に重み付けする際の重みを求めます。
+        let weight = null;
+        // register が 0 の場合は重みはありません。
+        if (register === 0){
+          weight = 1;
+        }
+        // register が 0 でない場合は、辺の登りか下りかで、重みを変えます。
+        else {
+          const zDifference = Math.abs(edge.zDifference);
+          weight = isLower(iClosestNode, edge) ? 
+            Math.exp(zDifference * register) : Math.exp(- zDifference * register);
+        }
+
+
         // 始点から現在のノードへの現時点での最短距離に、
-        // 隣接ノードへの辺の長さを足します。
+        // 隣接ノードへの、重みを付けした辺の長さを足します。
         // 始点から隣接ノードへの新しい最短距離の候補となります。
-        const minDistanceCandidate = minDistanceList[iClosestNode] + lenEdge;
+        const minDistanceCandidate = minDistanceList[iClosestNode] + lenEdge * weight;
 
         // 始点から隣接ノードへの現時点での最短経路が、
         // 「始点―現在のノード―隣接ノード」という経路で更新できる場合です。

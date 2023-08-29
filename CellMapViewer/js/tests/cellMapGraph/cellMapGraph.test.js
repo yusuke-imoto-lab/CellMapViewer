@@ -6,9 +6,14 @@ const Edge = require("../../cellMapViewer/cellMapGraph/edge");
 const idArray = ["Cell0", "Cell1", "Cell2", "Cell3"];
 const xyArray = [[1, 0], [0, 0], [0, 2], [3, -1]];
 const potentialArray = [-1, -4, -2, -3];
-const annotationArray = ["type1", "type2", "type1", "type1"];
+const annotationIndexList = [0];
+const vectorLabelList = ["velocity"];
+const xVectorIndexList = [2];
 const otherFeatureList = [
-  new CellMapFeature("other", new Float64Array([10, 11, 12, 13]))
+  new CellMapFeature("annotation", ["type1", "type2", "type1", "type1"], false),
+  new CellMapFeature("other", new Float64Array([10, 11, 12, 13]), true),
+  new CellMapFeature("velocity_x", new Float64Array([1, 2, 3, 4]), true),
+  new CellMapFeature("velocity_y", new Float64Array([-1, 2, -3, 4]), true),
 ];
 const edge01 = new Edge(0, 1, true, true, 1, undefined);
 const edge12 = new Edge(1, 2, true, false, 4, undefined);
@@ -38,9 +43,10 @@ test("constructor", () => {
   // x, y 配列の長さが異なる場合
   function xyDifferent() {
     new CellMapGraph(
-      idArray, xyArray.slice(1), potentialArray, annotationArray,
-      otherFeatureList, edgeListArray, areaSortedTriangles,
-      longestEdgeSortedTriangles, allEdgeList, potentialLabel, areaLabel, 30
+      idArray, xyArray.slice(1), potentialArray, otherFeatureList,
+      annotationIndexList, vectorLabelList, xVectorIndexList,
+      edgeListArray, areaSortedTriangles, longestEdgeSortedTriangles, 
+      allEdgeList
     );
   }
   expect(xyDifferent).toThrowError(lengthsNotEqualError);
@@ -48,9 +54,10 @@ test("constructor", () => {
   // ポテンシャル配列の長さが異なる場合
   function potentialDifferent() {
     new CellMapGraph(
-      idArray, xyArray, new Float64Array(1), annotationArray,
-      otherFeatureList, edgeListArray, areaSortedTriangles,
-      longestEdgeSortedTriangles, allEdgeList, potentialLabel, areaLabel, 30
+      idArray, xyArray, new Float64Array(1), otherFeatureList, 
+      annotationIndexList,vectorLabelList, xVectorIndexList,
+      edgeListArray, areaSortedTriangles, longestEdgeSortedTriangles, 
+      allEdgeList
     );
   }
   expect(potentialDifferent).toThrowError(lengthsNotEqualError);
@@ -58,9 +65,10 @@ test("constructor", () => {
   // 辺のリストの配列の長さが異なる場合
   function edgeDifferent() {
     new CellMapGraph(
-      idArray, xyArray, potentialArray, annotationArray,
-      otherFeatureList, edgeListArray.slice(1), areaSortedTriangles,
-      longestEdgeSortedTriangles, allEdgeList, potentialLabel, areaLabel, 30
+      idArray, xyArray, potentialArray, otherFeatureList,
+      annotationIndexList,vectorLabelList, xVectorIndexList,
+      edgeListArray.slice(1), areaSortedTriangles, longestEdgeSortedTriangles, 
+      allEdgeList
     );
   }
   expect(edgeDifferent).toThrowError(lengthsNotEqualError);
@@ -69,32 +77,54 @@ test("constructor", () => {
   function otherFeatureDifferent() {
     const shortOtherFeature = new CellMapFeature("name", new Float64Array(1));
     new CellMapGraph(
-      idArray, xyArray, potentialArray, annotationArray,
-      [shortOtherFeature], edgeListArray, areaSortedTriangles,
-      longestEdgeSortedTriangles, allEdgeList, potentialLabel, areaLabel, 30
+      idArray, xyArray, potentialArray, [shortOtherFeature], 
+      annotationIndexList,vectorLabelList, xVectorIndexList,
+      edgeListArray, areaSortedTriangles, longestEdgeSortedTriangles, 
+      allEdgeList
     );
   }
   expect(otherFeatureDifferent).toThrowError(lengthsNotEqualError);
 
+  // ベクトルのラベルの個数と、データ列の個数が異なる場合
+  function vectorLabelDifferent() {
+    new CellMapGraph(
+      idArray, xyArray, potentialArray, otherFeatureList, 
+      annotationIndexList,[], xVectorIndexList,
+      edgeListArray, areaSortedTriangles, longestEdgeSortedTriangles, 
+      allEdgeList
+    );
+  }
+  expect(vectorLabelDifferent).toThrowError(vectorDataError);
+
   // いずれの配列の長さもゼロである場合
   function arraysEmpty() {
     new CellMapGraph(
-      [], [], [], [], [], [], [], [], [], potentialLabel, areaLabel, 0
+      [], [], [], [], [], [], [], [], [], [], []
     );
   }
   expect(arraysEmpty).toThrowError(emptyGraphError);
 
-  // アノテーション配列が null でもエラーが出ないことの確認です。
+  // アノテーション配列が空でもエラーが出ないことの確認です。
   new CellMapGraph(
-    idArray, xyArray, potentialArray, null, otherFeatureList, edgeListArray,
-    areaSortedTriangles, longestEdgeSortedTriangles, allEdgeList,
-    potentialLabel, areaLabel, 30
+    idArray, xyArray, potentialArray, otherFeatureList, 
+    [], vectorLabelList, xVectorIndexList,
+    edgeListArray, areaSortedTriangles, longestEdgeSortedTriangles, 
+    allEdgeList,
+  );
+
+  // ベクトル関連の配列が空でもエラーが出ないことの確認です。
+  new CellMapGraph(
+    idArray, xyArray, potentialArray, otherFeatureList.slice(0, 2), 
+    annotationIndexList, [], [],
+    edgeListArray, areaSortedTriangles, longestEdgeSortedTriangles, 
+    allEdgeList,
   );
 
   const graph = new CellMapGraph(
-    idArray, xyArray, potentialArray, annotationArray,
-    otherFeatureList, edgeListArray, areaSortedTriangles,
-    longestEdgeSortedTriangles, allEdgeList, potentialLabel, areaLabel, 30
+    idArray, xyArray, potentialArray, otherFeatureList, 
+    annotationIndexList, vectorLabelList, xVectorIndexList,
+    edgeListArray, areaSortedTriangles, longestEdgeSortedTriangles, 
+    allEdgeList
   );
 
   // annotationSet をチェックします。
@@ -105,42 +135,42 @@ test("constructor", () => {
   // set zFeatureType が呼ばれて辺の 3 次元の長さが設定されていることの確認です。
   expect(edge01.len3dSquared).not.toBe(undefined);
 
-  // setThreshTypeAndPercent が呼ばれてプロパティが設定されていることの確認です。
-  expect(graph.triangleThreshType).toBe(areaLabel);
-  expect(graph.triangleThreshPercent).toBe(30);
 });
 
 // zFeatureLabelList ゲッターのテストです。
 test("zFeatureLabelList", () => {
 
   const graph = new CellMapGraph(
-    idArray, xyArray, potentialArray, annotationArray,
-    otherFeatureList, edgeListArray, areaSortedTriangles,
-    longestEdgeSortedTriangles, allEdgeList, potentialLabel, areaLabel, 30
+    idArray, xyArray, potentialArray, otherFeatureList, 
+    annotationIndexList,vectorLabelList, xVectorIndexList,
+    edgeListArray, areaSortedTriangles, longestEdgeSortedTriangles, 
+    allEdgeList
   );
-  expect(graph.zFeatureLabelList).toEqual([potentialLabel, "other"]);
+  expect(graph.zFeatureLabelList).toEqual([potentialLabel, "annotation", "other", "velocity_x", "velocity_y"]);
 });
 
 // dataLabelList ゲッターのテストです。
 test("dataLabelList", () => {
 
   const graph = new CellMapGraph(
-    idArray, xyArray, potentialArray, annotationArray,
-    otherFeatureList, edgeListArray, areaSortedTriangles,
-    longestEdgeSortedTriangles, allEdgeList, potentialLabel, areaLabel, 30
+    idArray, xyArray, potentialArray, otherFeatureList, 
+    annotationIndexList,vectorLabelList, xVectorIndexList,
+    edgeListArray, areaSortedTriangles, longestEdgeSortedTriangles, 
+    allEdgeList
   );
   expect(graph.dataLabelList).toEqual(
-    [idLabel, xLabel, yLabel, potentialLabel, annotationLabel, "other"]
+    [idLabel, xLabel, yLabel, potentialLabel, "annotation", "other", "velocity_x", "velocity_y"]
   );
 
   // アノテーションがない場合です。
   const noAnnotationGraph = new CellMapGraph(
-    idArray, xyArray, potentialArray, null, otherFeatureList, edgeListArray,
-    areaSortedTriangles, longestEdgeSortedTriangles, allEdgeList,
-    potentialLabel, areaLabel, 30
+    idArray, xyArray, potentialArray, otherFeatureList.slice(1), 
+    [], vectorLabelList, [1],
+    edgeListArray, areaSortedTriangles, longestEdgeSortedTriangles, 
+    allEdgeList
   );
   expect(noAnnotationGraph.dataLabelList).toEqual(
-    [idLabel, xLabel, yLabel, potentialLabel, "other"]
+    [idLabel, xLabel, yLabel, potentialLabel, "other", "velocity_x", "velocity_y"]
   );
 });
 
@@ -148,20 +178,33 @@ test("dataLabelList", () => {
 test("getSingleCellInfo", () => {
 
   const graph = new CellMapGraph(
-    idArray, xyArray, potentialArray, annotationArray,
-    otherFeatureList, edgeListArray, areaSortedTriangles,
-    longestEdgeSortedTriangles, allEdgeList, potentialLabel, areaLabel, 30
+    idArray, xyArray, potentialArray, otherFeatureList, 
+    annotationIndexList,vectorLabelList, xVectorIndexList,
+    edgeListArray, areaSortedTriangles, longestEdgeSortedTriangles, 
+    allEdgeList
   );
   expect(graph.getSingleCellInfo(0)).toEqual(
-    ["Cell0", 1, 0, -1, "type1", 10]
+    ["Cell0", 1, 0, -1, "type1", 10, 1, -1]
   );
+
   const noAnnotationGraph = new CellMapGraph(
-    idArray, xyArray, potentialArray, null, otherFeatureList, edgeListArray,
-    areaSortedTriangles, longestEdgeSortedTriangles, allEdgeList,
-    potentialLabel, areaLabel, 30
+    idArray, xyArray, potentialArray, otherFeatureList.slice(1), 
+    [], vectorLabelList, [1],
+    edgeListArray, areaSortedTriangles, longestEdgeSortedTriangles, 
+    allEdgeList
   );
   expect(noAnnotationGraph.getSingleCellInfo(0)).toEqual(
-    ["Cell0", 1, 0, -1, 10]
+    ["Cell0", 1, 0, -1, 10, 1, -1]
+  );
+
+  const noVectorGraph = new CellMapGraph(
+    idArray, xyArray, potentialArray, otherFeatureList.slice(0, 2), 
+    annotationIndexList, [], [],
+    edgeListArray, areaSortedTriangles, longestEdgeSortedTriangles, 
+    allEdgeList
+  );
+  expect(noVectorGraph.getSingleCellInfo(0)).toEqual(
+    ["Cell0", 1, 0, -1, "type1", 10]
   );
 });
 
@@ -170,17 +213,19 @@ test("getCellsAnnotated", () => {
 
   // アノテーションで細胞が取り出せることの確認です。
   const graph = new CellMapGraph(
-    idArray, xyArray, potentialArray, annotationArray,
-    otherFeatureList, edgeListArray, areaSortedTriangles,
-    longestEdgeSortedTriangles, allEdgeList, potentialLabel, areaLabel, 30
+    idArray, xyArray, potentialArray, otherFeatureList, 
+    annotationIndexList,vectorLabelList, xVectorIndexList,
+    edgeListArray, areaSortedTriangles, longestEdgeSortedTriangles, 
+    allEdgeList
   );
   expect(graph.getCellsAnnotated("type1")).toEqual([0, 2, 3]);
 
   // アノテーションが存在しないグラフの場合に空のリストが返ることの確認です。
   const noAnnotationGraph = new CellMapGraph(
-    idArray, xyArray, potentialArray, null,
-    otherFeatureList, edgeListArray, areaSortedTriangles,
-    longestEdgeSortedTriangles, allEdgeList, potentialLabel, areaLabel, 30
+    idArray, xyArray, potentialArray, otherFeatureList.slice(1), 
+    [], vectorLabelList, [1],
+    edgeListArray, areaSortedTriangles, longestEdgeSortedTriangles, 
+    allEdgeList
   );
   expect(noAnnotationGraph.getCellsAnnotated("type1")).toEqual([]);
 });
@@ -189,9 +234,10 @@ test("getCellsAnnotated", () => {
 test("getZFeatureArrayByName", () => {
 
   const graph = new CellMapGraph(
-    idArray, xyArray, potentialArray, annotationArray,
-    otherFeatureList, edgeListArray, areaSortedTriangles,
-    longestEdgeSortedTriangles, allEdgeList, potentialLabel, areaLabel, 30
+    idArray, xyArray, potentialArray, otherFeatureList, 
+    annotationIndexList,vectorLabelList, xVectorIndexList,
+    edgeListArray, areaSortedTriangles, longestEdgeSortedTriangles, 
+    allEdgeList
   );
   // 不正な特徴量でエラーが出ることの確認です。
   const invalidFeatureName = "invalidFeature";
@@ -225,13 +271,11 @@ test("set zFeatureType", () => {
   }
   expect(edge01.zDifference).toBe(undefined);
   const graph = new CellMapGraph(
-    idArray, xyArray, potentialArray, annotationArray,
-    otherFeatureList, edgeListArray, areaSortedTriangles,
-    longestEdgeSortedTriangles, allEdgeList, potentialLabel, areaLabel, 30
+    idArray, xyArray, potentialArray, otherFeatureList, 
+    annotationIndexList,vectorLabelList, xVectorIndexList,
+    edgeListArray, areaSortedTriangles, longestEdgeSortedTriangles, 
+    allEdgeList
   );
-  // セッター呼び出し前の edge の z 座標の差の確認です。
-  expect(edge01.zDifference).toBe(3);
-  expect(edge01.len3dSquared).toBe(10);
 
   // 不正な特徴量を指定するとエラーが出ることの確認です。
   const invalidFeatureStr = "invalidFeature";
@@ -241,74 +285,15 @@ test("set zFeatureType", () => {
   expect(invalidFeature).toThrow(featureDoesNotExistError(invalidFeatureStr));
 });
 
-// triangleThreshType セッターのテストです。
-test("set triangleThreshType", () => {
-
-  const graph = new CellMapGraph(
-    idArray, xyArray, potentialArray, annotationArray,
-    otherFeatureList, edgeListArray, areaSortedTriangles,
-    longestEdgeSortedTriangles, allEdgeList, potentialLabel, areaLabel, 30
-  );
-
-  // セッター呼び出し前の辺の状態の確認です。
-  expect(edge01.halfEdgeFrom1Enabled).toBe(false);
-  expect(edge01.halfEdgeFrom2Enabled).toBe(true);
-
-  // 正しい種類を渡した場合のプロパティの変化の確認と
-  // _updateEnabledEdge が呼ばれていることの確認です。
-  graph.triangleThreshType = longestEdgeLabel;
-  expect(graph.triangleThreshType).toBe(longestEdgeLabel);
-  expect(edge01.halfEdgeFrom1Enabled).toBe(true);
-  expect(edge01.halfEdgeFrom2Enabled).toBe(false);
-
-  // 不正な値を渡した場合のエラーの確認です。
-  const invalidTypeStr = "invalidType";
-  function invalidType() {
-    graph.triangleThreshType = invalidTypeStr;
-  }
-  expect(invalidType).toThrow(invalidThreshTypeError(invalidTypeStr));
-});
-
-// triangleThreshPercent セッターのテストです。
-test("set triangleThreshPercent", () => {
-
-  // 全ての辺が有効な状態でインスタンスを生成します。
-  const graph = new CellMapGraph(
-    idArray, xyArray, potentialArray, annotationArray,
-    otherFeatureList, edgeListArray, areaSortedTriangles,
-    longestEdgeSortedTriangles, allEdgeList, potentialLabel, areaLabel, 0
-  );
-
-  // セッター呼び出し前の辺の状態の確認です。
-  expect(edge01.halfEdgeFrom1Enabled).toBe(true);
-  expect(edge01.halfEdgeFrom2Enabled).toBe(true);
-
-  // 正しい値を渡した場合のプロパティの変化の確認と
-  // _updateEnabledEdge が呼ばれていることの確認です。
-  graph.triangleThreshPercent = 30;
-  expect(graph.triangleThreshPercent).toBe(30);
-  expect(edge01.halfEdgeFrom1Enabled).toBe(false);
-  expect(edge01.halfEdgeFrom2Enabled).toBe(true);
-
-  // 不正な値を渡した場合のエラーの確認です。
-  function negativeValue() {
-    graph.triangleThreshPercent = -1;
-  }
-  expect(negativeValue).toThrow(invalidThreshPercentError);
-  function tooLargeValue() {
-    graph.triangleThreshPercent = 101;
-  }
-  expect(tooLargeValue).toThrow(invalidThreshPercentError);
-});
-
 // setThreshtTypeAndPercent メソッドのテストです。
 test("setThreshTypeAndPercent", () => {
 
   // 全ての辺が有効な状態でインスタンスを生成します。
   const graph = new CellMapGraph(
-    idArray, xyArray, potentialArray, annotationArray,
-    otherFeatureList, edgeListArray, areaSortedTriangles,
-    longestEdgeSortedTriangles, allEdgeList, potentialLabel, areaLabel, 0
+    idArray, xyArray, potentialArray, otherFeatureList, 
+    annotationIndexList,vectorLabelList, xVectorIndexList,
+    edgeListArray, areaSortedTriangles, longestEdgeSortedTriangles, 
+    allEdgeList
   );
 
   // メソッド呼び出し前の辺の状態の確認です。
@@ -318,8 +303,6 @@ test("setThreshTypeAndPercent", () => {
   // 正しい種類と値を渡した場合のプロパティの変化の確認と
   // _updateEnabledEdge が呼ばれていることの確認です。
   graph.setThreshTypeAndPercent(longestEdgeLabel, 30);
-  expect(graph.triangleThreshType).toBe(longestEdgeLabel);
-  expect(graph.triangleThreshPercent).toBe(30);
   expect(edge01.halfEdgeFrom1Enabled).toBe(true);
   expect(edge01.halfEdgeFrom2Enabled).toBe(false);
 
@@ -341,38 +324,88 @@ test("setThreshTypeAndPercent", () => {
   expect(tooLargeValue).toThrow(invalidThreshPercentError);
 });
 
-// sortedTriangles ゲッターのテストです。
-test("get SortedTriangles", () => {
+// enabledTriangles ゲッターのテストです。
+test("get enabledTriangles", () => {
 
   // 面積でソートされている場合です。
   const areaSortedGraph = new CellMapGraph(
-    idArray, xyArray, potentialArray, annotationArray,
-    otherFeatureList, edgeListArray, areaSortedTriangles,
-    longestEdgeSortedTriangles, allEdgeList, potentialLabel, areaLabel, 0
+    idArray, xyArray, potentialArray, otherFeatureList, 
+    annotationIndexList,vectorLabelList, xVectorIndexList,
+    edgeListArray, areaSortedTriangles, longestEdgeSortedTriangles, 
+    allEdgeList
   );
-  expect(areaSortedGraph.sortedTriangles).toEqual(areaSortedTriangles);
+  areaSortedGraph.setThreshTypeAndPercent(areaLabel, 50);
+  expect(areaSortedGraph.enabledTriangles).toEqual(areaSortedTriangles.slice(0,3));
   // 最長辺の長さでソートされている場合です。
   const edgeSortedGraph = new CellMapGraph(
-    idArray, xyArray, potentialArray, annotationArray,
-    otherFeatureList, edgeListArray, areaSortedTriangles,
-    longestEdgeSortedTriangles, allEdgeList, potentialLabel,
-    longestEdgeLabel, 0
+    idArray, xyArray, potentialArray, otherFeatureList, 
+    annotationIndexList,vectorLabelList, xVectorIndexList,
+    edgeListArray, areaSortedTriangles, longestEdgeSortedTriangles, 
+    allEdgeList
   );
-  expect(edgeSortedGraph.sortedTriangles).toEqual(
-    longestEdgeSortedTriangles
+  edgeSortedGraph.setThreshTypeAndPercent(longestEdgeLabel, 50);
+  expect(edgeSortedGraph.enabledTriangles).toEqual(
+    longestEdgeSortedTriangles.slice(0,3)
   );
+});
+
+// disabledTriangles ゲッターのテストです。
+test("get disabledTriangles", () => {
+
+  // 面積でソートされている場合です。
+  const areaSortedGraph = new CellMapGraph(
+    idArray, xyArray, potentialArray, otherFeatureList, 
+    annotationIndexList,vectorLabelList, xVectorIndexList,
+    edgeListArray, areaSortedTriangles, longestEdgeSortedTriangles, 
+    allEdgeList
+  );
+  areaSortedGraph.setThreshTypeAndPercent(areaLabel, 50);
+  expect(areaSortedGraph.disabledTriangles).toEqual(areaSortedTriangles.slice(3));
+  // 最長辺の長さでソートされている場合です。
+  const edgeSortedGraph = new CellMapGraph(
+    idArray, xyArray, potentialArray, otherFeatureList, 
+    annotationIndexList,vectorLabelList, xVectorIndexList,
+    edgeListArray, areaSortedTriangles, longestEdgeSortedTriangles, 
+    allEdgeList
+  );
+  edgeSortedGraph.setThreshTypeAndPercent(longestEdgeLabel, 50);
+  expect(edgeSortedGraph.disabledTriangles).toEqual(
+    longestEdgeSortedTriangles.slice(3)
+  );
+});
+
+
+// _updateEnabledTriangles メソッドのテストです。
+test("_updateEnabledTriangles", () => {
+
+  const graph = new CellMapGraph(
+    idArray, xyArray, potentialArray, otherFeatureList, 
+    annotationIndexList,vectorLabelList, xVectorIndexList,
+    edgeListArray, areaSortedTriangles, longestEdgeSortedTriangles, 
+    allEdgeList
+  );
+  // 面積上位 50% を除外します。
+  graph.setThreshTypeAndPercent(areaLabel, 50);
+  expect(graph.enabledTriangles).toEqual(areaSortedTriangles.slice(0,3));
+  expect(graph.disabledTriangles).toEqual(areaSortedTriangles.slice(3));
+
+  // 除外面積を面積上位 1% に更新します。
+  graph.setThreshTypeAndPercent(areaLabel, 1);
+  expect(graph.enabledTriangles).toEqual(areaSortedTriangles);
+  expect(graph.disabledTriangles).toEqual(new Uint32Array());
 });
 
 // _updateEnabledEdge メソッドのテストです。
 test("_updateEnabledEdge", () => {
 
-  // このメソッドはコンストラクターから呼ばれます。
-  // よって、コンストラクターを呼んだ後の各辺の有効化状態を確認します。
-  new CellMapGraph(
-    idArray, xyArray, potentialArray, annotationArray,
-    otherFeatureList, edgeListArray, areaSortedTriangles,
-    longestEdgeSortedTriangles, allEdgeList, potentialLabel, areaLabel, 30
+  const graph = new CellMapGraph(
+    idArray, xyArray, potentialArray, otherFeatureList, 
+    annotationIndexList,vectorLabelList, xVectorIndexList,
+    edgeListArray, areaSortedTriangles, longestEdgeSortedTriangles, 
+    allEdgeList
   );
+  // 面積上位 30% を除外します。
+  graph.setThreshTypeAndPercent(areaLabel, 30);
   // 面積上位 30% を除外するので、三角形 0-1-2 を構成するhalf-edge と、
   // 他の三角形共有されていない half-edge が無効になっているはずです。
   expect(edge01.halfEdgeFrom1Enabled).toBe(false);
@@ -387,14 +420,4 @@ test("_updateEnabledEdge", () => {
   expect(edge31.halfEdgeFrom1Enabled).toBe(true);
   expect(edge31.halfEdgeFrom2Enabled).toBe(false);
   expect(edge01.halfEdgeFrom2Enabled).toBe(true);
-});
-
-// nEnabledTriangles ゲッターのテストです。
-test("get nEnabledTriangles", () => {
-  const graph = new CellMapGraph(
-    idArray, xyArray, potentialArray, annotationArray,
-    otherFeatureList, edgeListArray, areaSortedTriangles,
-    longestEdgeSortedTriangles, allEdgeList, potentialLabel, areaLabel, 30
-  );
-  expect(graph.nEnabledTriangles).toBe(1);
 });
